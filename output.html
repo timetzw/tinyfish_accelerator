@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rio Tinto — Proxy Vote Agent</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #f3f4f6; min-height: 100vh; display: flex; justify-content: center; padding: 32px 16px; }
+
+    #app { width: 100%; max-width: 700px; border: 0.5px solid #e5e7eb; border-radius: 12px; overflow: hidden; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.06); align-self: flex-start; }
+
+    /* Header */
+    .header { padding: 14px 20px; border-bottom: 0.5px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; background: white; }
+    .header-left { display: flex; flex-direction: column; gap: 2px; }
+    .header-eyebrow { font-size: 11px; font-weight: 500; color: #6b7280; letter-spacing: 0.06em; text-transform: uppercase; }
+    .header-title { font-size: 15px; font-weight: 500; color: #111827; }
+    .header-sub { font-size: 12px; color: #6b7280; }
+    .agent-badge { display: flex; align-items: center; gap: 6px; background: #f0fdf4; border: 0.5px solid #bbf7d0; border-radius: 20px; padding: 5px 12px; flex-shrink: 0; }
+    .agent-dot { width: 7px; height: 7px; border-radius: 50%; background: #15803d; }
+    .agent-label { font-size: 12px; color: #14532d; font-weight: 500; }
+
+    /* Deadline */
+    .deadline { background: #fffbeb; border-bottom: 0.5px solid #fde68a; padding: 7px 20px; font-size: 12px; color: #78350f; }
+
+    /* Stats */
+    .stats { display: flex; gap: 10px; padding: 14px 20px; border-bottom: 0.5px solid #e5e7eb; background: #f9fafb; }
+    .stat-card { flex: 1; background: white; border: 0.5px solid #e5e7eb; border-radius: 8px; padding: 10px 12px; }
+    .stat-num { font-size: 20px; font-weight: 500; }
+    .stat-lbl { font-size: 11px; color: #6b7280; margin-top: 2px; }
+    .stat-total { color: #111827; }
+    .stat-for { color: #15803d; }
+    .stat-against { color: #b91c1c; }
+
+    /* Section label */
+    .section-label { font-size: 11px; font-weight: 500; color: #6b7280; letter-spacing: 0.05em; text-transform: uppercase; padding: 10px 20px 4px; }
+
+    /* Proposals */
+    .proposal { border-bottom: 0.5px solid #e5e7eb; }
+    .proposal-header { display: flex; align-items: center; gap: 10px; padding: 11px 20px; cursor: pointer; background: white; transition: background 0.15s; user-select: none; }
+    .proposal-header:hover { background: #f9fafb; }
+    .proposal-header.open { background: #f9fafb; }
+    .prop-num { font-size: 12px; color: #6b7280; min-width: 22px; flex-shrink: 0; }
+    .prop-title { font-size: 13px; color: #111827; flex: 1; line-height: 1.4; }
+    .vote-pill { font-size: 11px; font-weight: 500; border-radius: 20px; padding: 3px 10px; white-space: nowrap; flex-shrink: 0; }
+    .pill-for { background: #f0fdf4; color: #14532d; border: 0.5px solid #bbf7d0; }
+    .pill-against { background: #fef2f2; color: #7f1d1d; border: 0.5px solid #fecaca; }
+    .pill-overridden { opacity: 0.7; }
+    .chevron { font-size: 10px; color: #9ca3af; margin-left: 2px; display: inline-block; transition: transform 0.18s; flex-shrink: 0; }
+    .chevron.open { transform: rotate(90deg); }
+
+    /* Detail panel */
+    .proposal-detail { display: none; padding: 0 20px 14px 52px; border-top: 0.5px solid #e5e7eb; background: #f9fafb; }
+    .proposal-detail.open { display: block; }
+    .detail-section { margin-top: 12px; }
+    .detail-heading { font-size: 11px; font-weight: 500; color: #6b7280; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 5px; }
+    .reasoning { font-size: 13px; color: #111827; line-height: 1.6; }
+    .factors { display: flex; flex-wrap: wrap; gap: 5px; }
+    .factor-tag { font-size: 11px; padding: 3px 9px; border-radius: 20px; background: white; border: 0.5px solid #d1d5db; color: #6b7280; }
+    .confidence-row { display: flex; align-items: center; gap: 10px; }
+    .conf-label { font-size: 12px; color: #6b7280; min-width: 80px; }
+    .conf-bar-wrap { flex: 1; height: 5px; background: #e5e7eb; border-radius: 3px; overflow: hidden; }
+    .conf-bar { height: 100%; border-radius: 3px; }
+    .bar-high { background: #16a34a; }
+    .bar-med { background: #d97706; }
+    .conf-pct { font-size: 12px; color: #6b7280; min-width: 32px; text-align: right; }
+    .board-rec { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #6b7280; margin-top: 6px; }
+    .rec-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .dot-agree { background: #16a34a; }
+    .dot-disagree { background: #dc2626; }
+    .override-btn { font-size: 11px; color: #6b7280; background: none; border: 0.5px solid #d1d5db; border-radius: 6px; padding: 3px 9px; cursor: pointer; }
+    .override-btn:hover { background: #f3f4f6; }
+    .override-hint { font-size: 11px; color: #9ca3af; margin-left: 6px; }
+
+    /* Footer */
+    .footer { padding: 14px 20px; border-top: 0.5px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; background: white; }
+    .footer-note { font-size: 11px; color: #9ca3af; }
+    .submit-btn { font-size: 13px; font-weight: 500; background: #1d4ed8; color: white; border: none; border-radius: 6px; padding: 8px 20px; cursor: pointer; }
+    .submit-btn:hover { background: #1e40af; }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <div class="header">
+    <div class="header-left">
+      <span class="header-eyebrow">Fidelity Investments · ProxyVote</span>
+      <span class="header-title">Rio Tinto PLC — 2026 Annual Meeting</span>
+      <span class="header-sub">Wednesday, May 6, 2026 · Shares available: 3</span>
+    </div>
+    <div class="agent-badge">
+      <div class="agent-dot"></div>
+      <span class="agent-label">Agent voted</span>
+    </div>
+  </div>
+
+  <div class="deadline">
+    ⏱ Voting deadline: April 29, 2026 at 11:59 p.m. ET — you can override any decision before then.
+  </div>
+
+  <div class="stats">
+    <div class="stat-card"><div class="stat-num stat-total" id="stat-total">21</div><div class="stat-lbl">Total proposals</div></div>
+    <div class="stat-card"><div class="stat-num stat-for" id="stat-for">18</div><div class="stat-lbl">Voted for</div></div>
+    <div class="stat-card"><div class="stat-num stat-against" id="stat-against">3</div><div class="stat-lbl">Voted against</div></div>
+  </div>
+
+  <div class="section-label">Proposals — click any row to expand reasoning</div>
+
+  <div id="proposals-list"></div>
+
+  <div class="footer">
+    <span class="footer-note">Agent decisions submitted · Override available until deadline</span>
+    <button class="submit-btn" onclick="alert('Votes already submitted by agent.')">Review &amp; confirm</button>
+  </div>
+
+</div>
+
+<script>
+const proposals = [
+  { num: 1, title: "Receipt of the 2025 Annual Report", vote: "FOR", confidence: 97, reasoning: "Standard procedural resolution. The 2025 Annual Report meets regulatory requirements and provides material disclosure. No basis to withhold.", factors: ["Regulatory compliance", "Standard procedure"], boardAgrees: true },
+  { num: 2, title: "Approval of the Directors' Remuneration Report: Implementation Report", vote: "FOR", confidence: 72, reasoning: "Pay outcomes are broadly aligned with performance, though total CEO compensation sits in the top quartile relative to peers. Short-term incentive payouts reflect solid underlying EBITDA delivery. Disclosure quality is adequate.", factors: ["Pay-performance alignment", "Peer benchmarking", "Disclosure quality"], boardAgrees: true },
+  { num: 3, title: "Approval of the Directors' Remuneration Report", vote: "AGAINST", confidence: 78, reasoning: "The forward-looking remuneration policy retains discretion clauses that could allow windfall awards absent a demonstrable pay-for-performance link. Peer benchmarking methodology is not fully disclosed. Agent votes against pending clearer framework.", factors: ["Windfall risk", "Insufficient disclosure", "Shareholder dilution"], boardAgrees: false },
+  { num: 4, title: "Approval of potential termination benefits", vote: "AGAINST", confidence: 81, reasoning: "Proposed termination benefits exceed 2× fixed pay in certain scenarios, which is above best-practice thresholds recommended by institutional governance codes. The trigger conditions for enhanced payouts are broadly defined.", factors: ["Excessive severance risk", "Governance norms", "Trigger ambiguity"], boardAgrees: false },
+  { num: 5, title: "To elect Simon Trott as a Director", vote: "FOR", confidence: 90, reasoning: "Mr. Trott brings deep operational expertise in iron ore and critical minerals. His appointment strengthens the board's sector knowledge ahead of the Simandou ramp-up. Independence criteria are met.", factors: ["Sector expertise", "Independence confirmed", "Simandou relevance"], boardAgrees: true },
+  { num: 6, title: "To re-elect Dominic Barton BBM as a Director", vote: "FOR", confidence: 85, reasoning: "Mr. Barton has led effective governance reforms since 2021. Attendance record is strong (94%) and his geopolitical networks are strategically valuable. No material conflicts identified.", factors: ["Governance track record", "Attendance 94%"], boardAgrees: true },
+  { num: 7, title: "To re-elect Peter Cunningham as a Director", vote: "FOR", confidence: 88, reasoning: "Mr. Cunningham's CFO background provides critical financial oversight. Audit committee chair role is well-suited to his experience. No independence concerns.", factors: ["Financial expertise", "Audit committee chair", "Independence confirmed"], boardAgrees: true },
+  { num: 8, title: "To re-elect Dean Dalla Valle as a Director", vote: "FOR", confidence: 86, reasoning: "Strong operational background in copper and coal assets. No governance red flags. Attendance and committee engagement are satisfactory.", factors: ["Operational expertise", "Clean record"], boardAgrees: true },
+  { num: 9, title: "To re-elect Susan Lloyd-Hurwitz AM as a Director", vote: "FOR", confidence: 89, reasoning: "Ms. Lloyd-Hurwitz brings valuable real-estate and sustainability governance experience. Her track record on ESG oversight is relevant given Rio Tinto's community commitments post-Juukan Gorge.", factors: ["ESG oversight", "Community engagement", "Independence confirmed"], boardAgrees: true },
+  { num: 10, title: "To re-elect Jennifer Nason as a Director", vote: "FOR", confidence: 84, reasoning: "Strong capital markets background. Advisory role experience adds perspective during the ongoing capital allocation review. No conflicts identified.", factors: ["Capital markets expertise", "No conflicts"], boardAgrees: true },
+  { num: 11, title: "To re-elect Joc O'Rourke as a Director", vote: "FOR", confidence: 83, reasoning: "Mining industry veteran with global operational and safety leadership experience. Independence maintained. Prior role at Mosaic Company provides useful fertilizer/potash context.", factors: ["Industry expertise", "Safety leadership"], boardAgrees: true },
+  { num: 12, title: "To re-elect Sharon Thorne as a Director", vote: "FOR", confidence: 87, reasoning: "Ms. Thorne's background in professional services and audit provides a strong check on financial reporting quality. Attendance record is consistent.", factors: ["Audit expertise", "Consistent attendance"], boardAgrees: true },
+  { num: 13, title: "To re-elect Ngaire Woods CBE as a Director", vote: "FOR", confidence: 85, reasoning: "Distinguished policy and development economics background. Adds important perspective on regulatory risk in emerging markets where Rio Tinto has material exposure.", factors: ["Policy expertise", "Emerging market risk"], boardAgrees: true },
+  { num: 14, title: "To re-elect Ben Wyatt as a Director", vote: "FOR", confidence: 91, reasoning: "Mr. Wyatt's appointment was a direct response to concerns raised by First Nations communities. His re-election is supported as a signal of continued commitment to Indigenous engagement.", factors: ["Indigenous engagement", "Community trust", "Governance signal"], boardAgrees: true },
+  { num: 15, title: "Re-appointment of auditor of Rio Tinto plc", vote: "FOR", confidence: 88, reasoning: "Incumbent auditor meets independence standards. Audit fees are within a reasonable range. No material adverse findings in audit quality reviews.", factors: ["Auditor independence", "Fee reasonableness"], boardAgrees: true },
+  { num: 16, title: "Remuneration of auditor", vote: "FOR", confidence: 86, reasoning: "Proposed remuneration is consistent with the scope of audit work and within market norms. Non-audit fees are appropriately capped.", factors: ["Fee proportionality", "Non-audit cap"], boardAgrees: true },
+  { num: 17, title: "Authority to make political donations", vote: "AGAINST", confidence: 84, reasoning: "Blanket authority of up to £100,000 for political donations lacks sufficient controls. Agent policy requires specific disclosure of intended recipients before granting open-ended authority. Voted against to request greater transparency.", factors: ["Disclosure insufficient", "Agent policy breach", "Blanket authority risk"], boardAgrees: false },
+  { num: 18, title: "General authority to allot shares", vote: "FOR", confidence: 80, reasoning: "The allotment headroom (one-third of issued share capital) is within standard market practice and does not raise dilution concerns at current levels.", factors: ["Market-standard headroom", "No dilution concern"], boardAgrees: true },
+  { num: 19, title: "Disapplication of pre-emption rights", vote: "FOR", confidence: 77, reasoning: "Disapplication is limited to 10% of issued share capital, consistent with Pre-Emption Group Statement of Principles. No additional capital raising plans have been announced.", factors: ["PEG compliance", "Limited scope"], boardAgrees: true },
+  { num: 20, title: "Authority to purchase Rio Tinto plc shares", vote: "FOR", confidence: 82, reasoning: "Buyback authority (up to 10% of share capital) is standard and supports capital return flexibility. Management has used prior authorisations prudently.", factors: ["Standard headroom", "Prudent track record"], boardAgrees: true },
+  { num: 21, title: "Notice period for general meetings other than AGMs", vote: "FOR", confidence: 79, reasoning: "14-day notice period is a standard procedural flexibility for non-AGM meetings. Not viewed as a governance concern given the board's overall accountability record.", factors: ["Standard procedure", "Limited governance risk"], boardAgrees: true },
+];
+
+const votes = {};
+let openRow = null;
+
+function updateStats() {
+  let forCount = 0, againstCount = 0;
+  proposals.forEach(p => {
+    const v = votes[p.num] ?? p.vote;
+    v === "FOR" ? forCount++ : againstCount++;
+  });
+  document.getElementById("stat-for").textContent = forCount;
+  document.getElementById("stat-against").textContent = againstCount;
+}
+
+function renderProposals() {
+  const list = document.getElementById("proposals-list");
+  list.innerHTML = "";
+
+  proposals.forEach(p => {
+    const currentVote = votes[p.num] ?? p.vote;
+    const isAgainst = currentVote === "AGAINST";
+    const overridden = votes[p.num] !== undefined && votes[p.num] !== p.vote;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "proposal";
+
+    const pillClass = isAgainst ? "pill-against" : "pill-for";
+    const pillText = (isAgainst ? "✗ Against" : "✓ For") + (overridden ? " <small style='font-size:10px'>(overridden)</small>" : "");
+    const barClass = p.confidence >= 85 ? "bar-high" : "bar-med";
+    const factorTags = p.factors.map(f => `<span class="factor-tag">${f}</span>`).join("");
+
+    wrapper.innerHTML = `
+      <div class="proposal-header" data-num="${p.num}">
+        <span class="prop-num">${p.num}.</span>
+        <span class="prop-title">${p.title}</span>
+        <span class="vote-pill ${pillClass} ${overridden ? 'pill-overridden' : ''}">${pillText}</span>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="proposal-detail" id="detail-${p.num}">
+        <div class="detail-section">
+          <div class="detail-heading">Agent reasoning</div>
+          <div class="reasoning">${p.reasoning}</div>
+        </div>
+        <div class="detail-section">
+          <div class="detail-heading">Key factors</div>
+          <div class="factors">${factorTags}</div>
+        </div>
+        <div class="detail-section">
+          <div class="confidence-row">
+            <span class="conf-label">Confidence</span>
+            <div class="conf-bar-wrap"><div class="conf-bar ${barClass}" style="width:${p.confidence}%"></div></div>
+            <span class="conf-pct">${p.confidence}%</span>
+          </div>
+          <div class="board-rec">
+            <div class="rec-dot ${p.boardAgrees ? 'dot-agree' : 'dot-disagree'}"></div>
+            <span>${p.boardAgrees ? "Agrees with board recommendation" : "Disagrees with board recommendation"}</span>
+          </div>
+        </div>
+        <div class="detail-section">
+          <button class="override-btn" data-num="${p.num}">Override vote</button>
+          <span class="override-hint">Changes sync before deadline</span>
+        </div>
+      </div>
+    `;
+
+    const header = wrapper.querySelector(".proposal-header");
+    header.addEventListener("click", () => {
+      const detail = wrapper.querySelector(".proposal-detail");
+      const chevron = wrapper.querySelector(".chevron");
+      const isOpen = detail.classList.contains("open");
+
+      document.querySelectorAll(".proposal-detail.open").forEach(d => d.classList.remove("open"));
+      document.querySelectorAll(".proposal-header.open").forEach(h => h.classList.remove("open"));
+      document.querySelectorAll(".chevron.open").forEach(c => c.classList.remove("open"));
+
+      if (!isOpen) {
+        detail.classList.add("open");
+        header.classList.add("open");
+        chevron.classList.add("open");
+      }
+    });
+
+    const overrideBtn = wrapper.querySelector(".override-btn");
+    overrideBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const num = parseInt(e.target.dataset.num);
+      const current = votes[num] ?? proposals[num - 1].vote;
+      votes[num] = current === "FOR" ? "AGAINST" : "FOR";
+      updateStats();
+      renderProposals();
+
+      const newDetail = document.getElementById(`detail-${num}`);
+      const newHeader = document.querySelector(`[data-num="${num}"]`);
+      const newChevron = newHeader.querySelector(".chevron");
+      if (newDetail && newHeader) {
+        newDetail.classList.add("open");
+        newHeader.classList.add("open");
+        newChevron.classList.add("open");
+      }
+    });
+
+    list.appendChild(wrapper);
+  });
+}
+
+renderProposals();
+updateStats();
+</script>
+</body>
+</html>
