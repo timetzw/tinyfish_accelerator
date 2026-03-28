@@ -3,467 +3,243 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Proxy Voting Profile — Tell Us What You Care About</title>
+<title>Proxy Vote Agent — Set Up Your Voting Profile</title>
 <style>
-  :root {
-    --bg: #0f1923;
-    --card: #1a2736;
-    --border: #2a3a4a;
-    --accent: #4f9cf7;
-    --accent-hover: #6bb0ff;
-    --text: #e1e8ef;
-    --muted: #8899aa;
-    --green: #34d399;
-    --red: #f87171;
-    --yellow: #fbbf24;
-    --radius: 12px;
-  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: #f3f4f6; min-height: 100vh; display: flex; justify-content: center; padding: 32px 16px; }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  #app { width: 100%; max-width: 700px; align-self: flex-start; }
 
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.6;
-    min-height: 100vh;
-  }
-
-  .container {
-    max-width: 680px;
-    margin: 0 auto;
-    padding: 40px 20px 80px;
-  }
-
-  /* Header */
-  .hero {
-    text-align: center;
-    margin-bottom: 48px;
-  }
-  .hero-icon {
-    font-size: 48px;
+  /* Top card matches output.html header style */
+  .hero-card {
+    background: white;
+    border: 0.5px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
     margin-bottom: 16px;
   }
-  .hero h1 {
-    font-size: 28px;
-    font-weight: 700;
-    margin-bottom: 8px;
-    color: #fff;
+  .hero-header {
+    padding: 14px 20px;
+    border-bottom: 0.5px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
-  .hero p {
-    color: var(--muted);
-    font-size: 16px;
-    max-width: 480px;
-    margin: 0 auto;
-  }
+  .hero-header-left { display: flex; flex-direction: column; gap: 2px; }
+  .hero-eyebrow { font-size: 11px; font-weight: 500; color: #6b7280; letter-spacing: 0.06em; text-transform: uppercase; }
+  .hero-title { font-size: 15px; font-weight: 500; color: #111827; }
+  .hero-sub { font-size: 12px; color: #6b7280; }
+  .setup-badge { display: flex; align-items: center; gap: 6px; background: #eff6ff; border: 0.5px solid #bfdbfe; border-radius: 20px; padding: 5px 12px; flex-shrink: 0; }
+  .setup-dot { width: 7px; height: 7px; border-radius: 50%; background: #1d4ed8; }
+  .setup-label { font-size: 12px; color: #1e3a5f; font-weight: 500; }
+  .hero-body { padding: 14px 20px; font-size: 13px; color: #6b7280; line-height: 1.6; }
 
-  /* Progress bar */
+  /* Progress */
   .progress-bar {
     position: sticky;
     top: 0;
     z-index: 10;
-    background: var(--bg);
-    padding: 16px 0 12px;
+    background: #f3f4f6;
+    padding: 12px 0;
   }
-  .progress-track {
-    height: 4px;
-    background: var(--border);
-    border-radius: 2px;
-    overflow: hidden;
-  }
-  .progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--accent), var(--green));
-    border-radius: 2px;
-    width: 0%;
-    transition: width 0.4s ease;
-  }
-  .progress-label {
-    font-size: 13px;
-    color: var(--muted);
-    margin-top: 6px;
-    text-align: right;
-  }
+  .progress-track { height: 4px; background: #e5e7eb; border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: #1d4ed8; border-radius: 2px; width: 0%; transition: width 0.4s ease; }
+  .progress-label { font-size: 11px; color: #6b7280; margin-top: 4px; text-align: right; }
 
-  /* Sections */
+  /* Section cards — match output.html proposal card style */
   .section {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 32px;
-    margin-bottom: 24px;
-    transition: border-color 0.2s;
+    background: white;
+    border: 0.5px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
   }
-  .section:hover {
-    border-color: var(--accent);
+  .section-header {
+    padding: 11px 20px;
+    border-bottom: 0.5px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #f9fafb;
   }
   .section-number {
-    display: inline-block;
-    background: var(--accent);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #1d4ed8;
     color: #fff;
-    font-size: 13px;
+    font-size: 11px;
     font-weight: 700;
-    width: 28px;
-    height: 28px;
-    line-height: 28px;
-    text-align: center;
-    border-radius: 50%;
-    margin-bottom: 12px;
-  }
-  .section h2 {
-    font-size: 20px;
-    font-weight: 600;
-    margin-bottom: 4px;
-    color: #fff;
-  }
-  .section .subtitle {
-    font-size: 14px;
-    color: var(--muted);
-    margin-bottom: 24px;
-  }
-
-  /* Form elements */
-  .field {
-    margin-bottom: 20px;
-  }
-  .field:last-child {
-    margin-bottom: 0;
-  }
-  .field label {
-    display: block;
-    font-size: 15px;
-    font-weight: 500;
-    margin-bottom: 8px;
-  }
-
-  /* Card-style radio options */
-  .option-cards {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .option-card {
-    position: relative;
-    cursor: pointer;
-  }
-  .option-card input {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
-  }
-  .option-card .card-label {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 16px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    transition: all 0.15s;
-    font-size: 14px;
-  }
-  .option-card .card-label:hover {
-    border-color: var(--accent);
-    background: rgba(79, 156, 247, 0.05);
-  }
-  .option-card input:checked + .card-label {
-    border-color: var(--accent);
-    background: rgba(79, 156, 247, 0.1);
-  }
-  .option-card .radio-dot {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    border: 2px solid var(--border);
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.15s;
-  }
-  .option-card input:checked + .card-label .radio-dot {
-    border-color: var(--accent);
-  }
-  .option-card input:checked + .card-label .radio-dot::after {
-    content: '';
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--accent);
-  }
-  .option-card .card-text strong {
-    display: block;
-    font-size: 14px;
-    color: #fff;
-  }
-  .option-card .card-text span {
-    font-size: 13px;
-    color: var(--muted);
-  }
-
-  /* Checkbox cards */
-  .checkbox-cards {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .checkbox-card {
-    position: relative;
-    cursor: pointer;
-  }
-  .checkbox-card input {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
-  }
-  .checkbox-card .card-label {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 16px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    transition: all 0.15s;
-    font-size: 14px;
-  }
-  .checkbox-card .card-label:hover {
-    border-color: var(--accent);
-  }
-  .checkbox-card input:checked + .card-label {
-    border-color: var(--accent);
-    background: rgba(79, 156, 247, 0.1);
-  }
-  .check-box {
-    width: 20px;
-    height: 20px;
-    border-radius: 5px;
-    border: 2px solid var(--border);
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.15s;
-  }
-  .checkbox-card input:checked + .card-label .check-box {
-    border-color: var(--accent);
-    background: var(--accent);
-  }
-  .checkbox-card input:checked + .card-label .check-box::after {
-    content: '';
-    width: 6px;
-    height: 10px;
-    border: 2px solid #fff;
-    border-top: none;
-    border-left: none;
-    transform: rotate(45deg) translateY(-1px);
-  }
-
-  /* Slider */
-  .slider-field {
-    padding: 8px 0;
-  }
-  .slider-labels {
-    display: flex;
-    justify-content: space-between;
-    font-size: 12px;
-    color: var(--muted);
-    margin-bottom: 10px;
-  }
-  input[type="range"] {
-    -webkit-appearance: none;
-    width: 100%;
-    height: 6px;
-    border-radius: 3px;
-    background: var(--border);
-    outline: none;
-  }
-  input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    background: var(--accent);
-    cursor: pointer;
-    border: 3px solid var(--card);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    flex-shrink: 0;
   }
-  .slider-value {
-    text-align: center;
-    margin-top: 10px;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--accent);
+  .section-header h2 { font-size: 13px; font-weight: 500; color: #111827; }
+  .section-body { padding: 16px 20px; }
+  .subtitle { font-size: 12px; color: #6b7280; margin-bottom: 16px; }
+
+  /* Form fields */
+  .field { margin-bottom: 18px; }
+  .field:last-child { margin-bottom: 0; }
+  .field label.field-label { display: block; font-size: 13px; font-weight: 500; color: #111827; margin-bottom: 8px; line-height: 1.4; }
+
+  /* Option cards — radio */
+  .option-cards { display: flex; flex-direction: column; gap: 6px; }
+  .option-card { position: relative; cursor: pointer; }
+  .option-card input { position: absolute; opacity: 0; pointer-events: none; }
+  .option-card .card-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: white;
+    border: 0.5px solid #e5e7eb;
+    border-radius: 8px;
+    transition: all 0.15s;
+    font-size: 13px;
+    color: #111827;
   }
+  .option-card .card-label:hover { border-color: #93c5fd; background: #f0f7ff; }
+  .option-card input:checked + .card-label { border-color: #1d4ed8; background: #eff6ff; }
+  .option-card .radio-dot {
+    width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #d1d5db;
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s;
+  }
+  .option-card input:checked + .card-label .radio-dot { border-color: #1d4ed8; }
+  .option-card input:checked + .card-label .radio-dot::after {
+    content: ''; width: 8px; height: 8px; border-radius: 50%; background: #1d4ed8;
+  }
+  .card-text strong { display: block; font-size: 13px; color: #111827; font-weight: 500; }
+  .card-text span { font-size: 12px; color: #6b7280; }
+
+  /* Checkbox cards */
+  .checkbox-cards { display: flex; flex-direction: column; gap: 6px; }
+  .checkbox-card { position: relative; cursor: pointer; }
+  .checkbox-card input { position: absolute; opacity: 0; pointer-events: none; }
+  .checkbox-card .card-label {
+    display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+    background: white; border: 0.5px solid #e5e7eb; border-radius: 8px;
+    transition: all 0.15s; font-size: 13px; color: #111827;
+  }
+  .checkbox-card .card-label:hover { border-color: #93c5fd; }
+  .checkbox-card input:checked + .card-label { border-color: #1d4ed8; background: #eff6ff; }
+  .check-box {
+    width: 18px; height: 18px; border-radius: 4px; border: 1.5px solid #d1d5db;
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s;
+  }
+  .checkbox-card input:checked + .card-label .check-box { border-color: #1d4ed8; background: #1d4ed8; }
+  .checkbox-card input:checked + .card-label .check-box::after {
+    content: ''; width: 5px; height: 9px; border: 1.5px solid #fff; border-top: none; border-left: none; transform: rotate(45deg) translateY(-1px);
+  }
+
+  /* Slider */
+  .slider-field { padding: 4px 0; }
+  .slider-labels { display: flex; justify-content: space-between; font-size: 11px; color: #6b7280; margin-bottom: 8px; }
+  input[type="range"] {
+    -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px; background: #e5e7eb; outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%;
+    background: #1d4ed8; cursor: pointer; border: 3px solid white; box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+  .slider-value { text-align: center; margin-top: 8px; font-size: 13px; font-weight: 600; color: #1d4ed8; }
+
+  /* Rank list */
+  .rank-list { display: flex; flex-direction: column; gap: 6px; }
+  .rank-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+    background: white; border: 0.5px solid #e5e7eb; border-radius: 8px; font-size: 13px; color: #111827;
+  }
+  .rank-item select {
+    background: #f9fafb; border: 0.5px solid #d1d5db; border-radius: 4px;
+    color: #1d4ed8; font-size: 13px; font-weight: 600; padding: 3px 6px; width: 44px; text-align: center; cursor: pointer;
+  }
+  .rank-item select:focus { outline: none; border-color: #1d4ed8; }
 
   /* Textarea */
   textarea {
-    width: 100%;
-    min-height: 80px;
-    padding: 12px 14px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text);
-    font-family: inherit;
-    font-size: 14px;
-    resize: vertical;
-    transition: border-color 0.15s;
+    width: 100%; min-height: 72px; padding: 10px 14px; background: white;
+    border: 0.5px solid #e5e7eb; border-radius: 8px; color: #111827;
+    font-family: inherit; font-size: 13px; resize: vertical; transition: border-color 0.15s; line-height: 1.5;
   }
-  textarea:focus {
-    outline: none;
-    border-color: var(--accent);
-  }
-  textarea::placeholder {
-    color: var(--muted);
-  }
+  textarea:focus { outline: none; border-color: #1d4ed8; }
+  textarea::placeholder { color: #9ca3af; }
 
-  /* Ranking (drag-style but using number select) */
-  .rank-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .rank-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 14px;
-  }
-  .rank-item select {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--accent);
-    font-size: 14px;
-    font-weight: 700;
-    padding: 4px 8px;
-    width: 48px;
-    text-align: center;
-    cursor: pointer;
-  }
-  .rank-item select:focus {
-    outline: none;
-    border-color: var(--accent);
-  }
-
-  /* Submit */
+  /* Footer / submit — matches output.html footer */
   .submit-section {
-    text-align: center;
-    padding: 40px 0;
-  }
-  .btn-submit {
-    display: inline-flex;
+    background: white;
+    border: 0.5px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 14px 20px;
+    display: flex;
     align-items: center;
-    gap: 8px;
-    background: linear-gradient(135deg, var(--accent), #3b82f6);
-    color: #fff;
-    font-size: 16px;
-    font-weight: 600;
-    padding: 14px 40px;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: 0 4px 20px rgba(79, 156, 247, 0.3);
+    justify-content: space-between;
+    margin-top: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
   }
-  .btn-submit:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 28px rgba(79, 156, 247, 0.4);
+  .submit-note { font-size: 11px; color: #9ca3af; }
+  .btn-submit {
+    font-size: 13px; font-weight: 500; background: #1d4ed8; color: white;
+    border: none; border-radius: 6px; padding: 8px 20px; cursor: pointer; transition: background 0.15s;
   }
-  .btn-submit:active {
-    transform: translateY(0);
-  }
-  .submit-note {
-    font-size: 13px;
-    color: var(--muted);
-    margin-top: 12px;
-  }
+  .btn-submit:hover { background: #1e40af; }
 
   /* Result modal */
   .modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.7);
-    z-index: 100;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3);
+    z-index: 100; align-items: center; justify-content: center; padding: 20px;
   }
-  .modal-overlay.active {
-    display: flex;
-  }
+  .modal-overlay.active { display: flex; }
   .modal {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    max-width: 600px;
-    width: 100%;
-    max-height: 80vh;
-    overflow-y: auto;
-    padding: 32px;
+    background: white; border: 0.5px solid #e5e7eb; border-radius: 12px;
+    max-width: 600px; width: 100%; max-height: 80vh; overflow-y: auto; padding: 24px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.12);
   }
-  .modal h2 {
-    color: #fff;
-    margin-bottom: 16px;
-  }
+  .modal h2 { font-size: 15px; font-weight: 500; color: #111827; margin-bottom: 4px; }
+  .modal .modal-sub { font-size: 12px; color: #6b7280; margin-bottom: 16px; }
   .modal pre {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 16px;
-    font-size: 13px;
-    line-height: 1.5;
-    overflow-x: auto;
-    white-space: pre-wrap;
-    color: var(--text);
+    background: #f9fafb; border: 0.5px solid #e5e7eb; border-radius: 8px;
+    padding: 14px; font-size: 12px; line-height: 1.5; overflow-x: auto; white-space: pre-wrap; color: #111827;
   }
-  .modal .btn-row {
-    display: flex;
-    gap: 12px;
-    margin-top: 20px;
+  .modal .btn-row { display: flex; gap: 8px; margin-top: 16px; }
+  .btn-action {
+    font-size: 12px; font-weight: 500; padding: 7px 16px; border-radius: 6px; cursor: pointer; transition: all 0.15s;
   }
-  .btn-copy, .btn-close {
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    border: 1px solid var(--border);
-    transition: all 0.15s;
-  }
-  .btn-copy {
-    background: var(--accent);
-    color: #fff;
-    border-color: var(--accent);
-  }
-  .btn-copy:hover { background: var(--accent-hover); }
-  .btn-close {
-    background: transparent;
-    color: var(--text);
-  }
-  .btn-close:hover { background: var(--bg); }
+  .btn-copy { background: #1d4ed8; color: white; border: none; }
+  .btn-copy:hover { background: #1e40af; }
+  .btn-download { background: #f0fdf4; color: #14532d; border: 0.5px solid #bbf7d0; }
+  .btn-download:hover { background: #dcfce7; }
+  .btn-close { background: white; color: #6b7280; border: 0.5px solid #d1d5db; }
+  .btn-close:hover { background: #f9fafb; }
 
-  /* Responsive */
   @media (max-width: 480px) {
-    .container { padding: 24px 16px 60px; }
-    .section { padding: 24px 20px; }
-    .hero h1 { font-size: 24px; }
+    body { padding: 16px 8px; }
+    .section-body { padding: 14px 16px; }
+    .submit-section { flex-direction: column; gap: 10px; text-align: center; }
   }
 </style>
 </head>
 <body>
 
-<div class="container">
-  <div class="hero">
-    <div class="hero-icon">&#x1F5F3;&#xFE0F;</div>
-    <h1>Set Up Your Voting Profile</h1>
-    <p>Answer a few quick questions so our AI can vote on company proposals the way you would. Takes about 2 minutes.</p>
+<div id="app">
+  <!-- Hero card — matches output.html header pattern -->
+  <div class="hero-card">
+    <div class="hero-header">
+      <div class="hero-header-left">
+        <span class="hero-eyebrow">Fidelity Investments &middot; ProxyVote</span>
+        <span class="hero-title">Set Up Your Voting Profile</span>
+        <span class="hero-sub">One-time setup &middot; Takes about 2 minutes</span>
+      </div>
+      <div class="setup-badge">
+        <div class="setup-dot"></div>
+        <span class="setup-label">New profile</span>
+      </div>
+    </div>
+    <div class="hero-body">
+      Answer a few questions so our AI agent can vote on company proposals the way you would. Your profile is used to make personalized FOR/AGAINST decisions on proxy resolutions across all your holdings.
+    </div>
   </div>
 
   <div class="progress-bar">
@@ -473,265 +249,180 @@
 
   <form id="questionnaireForm">
 
-    <!-- Section 1: Investment Style -->
+    <!-- Section 1 -->
     <div class="section" data-section="1">
-      <div class="section-number">1</div>
-      <h2>How do you invest?</h2>
-      <p class="subtitle">This helps us understand your baseline perspective.</p>
-
-      <div class="field">
-        <label>What's your primary investment goal?</label>
-        <div class="option-cards">
-          <label class="option-card">
-            <input type="radio" name="goal" value="growth" required>
-            <div class="card-label">
-              <div class="radio-dot"></div>
-              <div class="card-text">
-                <strong>Long-term growth</strong>
-                <span>Build wealth over 10+ years, ride out short-term dips</span>
-              </div>
-            </div>
-          </label>
-          <label class="option-card">
-            <input type="radio" name="goal" value="income">
-            <div class="card-label">
-              <div class="radio-dot"></div>
-              <div class="card-text">
-                <strong>Steady income</strong>
-                <span>Prioritize dividends and stable returns</span>
-              </div>
-            </div>
-          </label>
-          <label class="option-card">
-            <input type="radio" name="goal" value="balanced">
-            <div class="card-label">
-              <div class="radio-dot"></div>
-              <div class="card-text">
-                <strong>Balanced</strong>
-                <span>Mix of growth and income, moderate risk</span>
-              </div>
-            </div>
-          </label>
-          <label class="option-card">
-            <input type="radio" name="goal" value="aggressive">
-            <div class="card-label">
-              <div class="radio-dot"></div>
-              <div class="card-text">
-                <strong>Aggressive growth</strong>
-                <span>Maximize returns, comfortable with volatility</span>
-              </div>
-            </div>
-          </label>
-        </div>
+      <div class="section-header">
+        <div class="section-number">1</div>
+        <h2>How do you invest?</h2>
       </div>
+      <div class="section-body">
+        <p class="subtitle">This helps us understand your baseline perspective as a shareholder.</p>
 
-      <div class="field">
-        <label>What types of companies do you mostly hold?</label>
-        <div class="checkbox-cards">
-          <label class="checkbox-card">
-            <input type="checkbox" name="holdings" value="large_cap_tech">
-            <div class="card-label"><div class="check-box"></div>Large-cap tech (Apple, Microsoft, Google)</div>
-          </label>
-          <label class="checkbox-card">
-            <input type="checkbox" name="holdings" value="index_funds">
-            <div class="card-label"><div class="check-box"></div>Index funds / ETFs (S&P 500, total market)</div>
-          </label>
-          <label class="checkbox-card">
-            <input type="checkbox" name="holdings" value="financials">
-            <div class="card-label"><div class="check-box"></div>Financials (banks, insurance)</div>
-          </label>
-          <label class="checkbox-card">
-            <input type="checkbox" name="holdings" value="consumer">
-            <div class="card-label"><div class="check-box"></div>Consumer brands (Amazon, Disney, Nike)</div>
-          </label>
-          <label class="checkbox-card">
-            <input type="checkbox" name="holdings" value="energy">
-            <div class="card-label"><div class="check-box"></div>Energy (oil, gas, renewables)</div>
-          </label>
-          <label class="checkbox-card">
-            <input type="checkbox" name="holdings" value="healthcare">
-            <div class="card-label"><div class="check-box"></div>Healthcare / biotech</div>
-          </label>
+        <div class="field">
+          <label class="field-label">What's your primary investment goal?</label>
+          <div class="option-cards">
+            <label class="option-card">
+              <input type="radio" name="goal" value="growth" required>
+              <div class="card-label"><div class="radio-dot"></div><div class="card-text"><strong>Long-term growth</strong><span>Build wealth over 10+ years, ride out short-term dips</span></div></div>
+            </label>
+            <label class="option-card">
+              <input type="radio" name="goal" value="income">
+              <div class="card-label"><div class="radio-dot"></div><div class="card-text"><strong>Steady income</strong><span>Prioritize dividends and stable returns</span></div></div>
+            </label>
+            <label class="option-card">
+              <input type="radio" name="goal" value="balanced">
+              <div class="card-label"><div class="radio-dot"></div><div class="card-text"><strong>Balanced</strong><span>Mix of growth and income, moderate risk</span></div></div>
+            </label>
+            <label class="option-card">
+              <input type="radio" name="goal" value="aggressive">
+              <div class="card-label"><div class="radio-dot"></div><div class="card-text"><strong>Aggressive growth</strong><span>Maximize returns, comfortable with volatility</span></div></div>
+            </label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">What types of companies do you mostly hold?</label>
+          <div class="checkbox-cards">
+            <label class="checkbox-card"><input type="checkbox" name="holdings" value="large_cap_tech"><div class="card-label"><div class="check-box"></div>Large-cap tech (Apple, Microsoft, Google)</div></label>
+            <label class="checkbox-card"><input type="checkbox" name="holdings" value="index_funds"><div class="card-label"><div class="check-box"></div>Index funds / ETFs (S&P 500, total market)</div></label>
+            <label class="checkbox-card"><input type="checkbox" name="holdings" value="financials"><div class="card-label"><div class="check-box"></div>Financials (banks, insurance)</div></label>
+            <label class="checkbox-card"><input type="checkbox" name="holdings" value="consumer"><div class="card-label"><div class="check-box"></div>Consumer brands (Amazon, Disney, Nike)</div></label>
+            <label class="checkbox-card"><input type="checkbox" name="holdings" value="energy"><div class="card-label"><div class="check-box"></div>Energy (oil, gas, renewables)</div></label>
+            <label class="checkbox-card"><input type="checkbox" name="holdings" value="healthcare"><div class="card-label"><div class="check-box"></div>Healthcare / biotech</div></label>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Section 2: ESG -->
+    <!-- Section 2 -->
     <div class="section" data-section="2">
-      <div class="section-number">2</div>
-      <h2>Environment & Climate</h2>
-      <p class="subtitle">How should your agent handle environmental proposals?</p>
-
-      <div class="field">
-        <label>When a company is asked to report on climate risks and emissions, I generally want to vote:</label>
-        <div class="option-cards">
-          <label class="option-card">
-            <input type="radio" name="climate" value="always_for" required>
-            <div class="card-label"><div class="radio-dot"></div><div class="card-text"><strong>Always FOR</strong><span>Climate transparency is always good for investors</span></div></div>
-          </label>
-          <label class="option-card">
-            <input type="radio" name="climate" value="usually_for">
-            <div class="card-label"><div class="radio-dot"></div><div class="card-text"><strong>Usually FOR</strong><span>Support if the proposal is focused and material</span></div></div>
-          </label>
-          <label class="option-card">
-            <input type="radio" name="climate" value="case_by_case">
-            <div class="card-label"><div class="radio-dot"></div><div class="card-text"><strong>Case by case</strong><span>Depends on cost and relevance to the business</span></div></div>
-          </label>
-          <label class="option-card">
-            <input type="radio" name="climate" value="usually_against">
-            <div class="card-label"><div class="radio-dot"></div><div class="card-text"><strong>Usually AGAINST</strong><span>These proposals often add cost without clear benefit</span></div></div>
-          </label>
+      <div class="section-header">
+        <div class="section-number">2</div>
+        <h2>Environment & Climate</h2>
+      </div>
+      <div class="section-body">
+        <p class="subtitle">How should your agent handle environmental proposals?</p>
+        <div class="field">
+          <label class="field-label">When a company is asked to report on climate risks and emissions, I generally want to vote:</label>
+          <div class="option-cards">
+            <label class="option-card"><input type="radio" name="climate" value="always_for" required><div class="card-label"><div class="radio-dot"></div><div class="card-text"><strong>Always FOR</strong><span>Climate transparency is always good for investors</span></div></div></label>
+            <label class="option-card"><input type="radio" name="climate" value="usually_for"><div class="card-label"><div class="radio-dot"></div><div class="card-text"><strong>Usually FOR</strong><span>Support if the proposal is focused and material</span></div></div></label>
+            <label class="option-card"><input type="radio" name="climate" value="case_by_case"><div class="card-label"><div class="radio-dot"></div><div class="card-text"><strong>Case by case</strong><span>Depends on cost and relevance to the business</span></div></div></label>
+            <label class="option-card"><input type="radio" name="climate" value="usually_against"><div class="card-label"><div class="radio-dot"></div><div class="card-text"><strong>Usually AGAINST</strong><span>These proposals often add cost without clear benefit</span></div></div></label>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Section 3: Social -->
+    <!-- Section 3 -->
     <div class="section" data-section="3">
-      <div class="section-number">3</div>
-      <h2>Social & Workplace Issues</h2>
-      <p class="subtitle">Proposals about workers, diversity, and human rights.</p>
-
-      <div class="field">
-        <label>How do you feel about shareholder proposals on workplace equity, pay gaps, and worker safety?</label>
-        <div class="option-cards">
-          <label class="option-card">
-            <input type="radio" name="social" value="strongly_support" required>
-            <div class="card-label"><div class="radio-dot"></div><div class="card-text"><strong>Strongly support</strong><span>These issues matter and companies should be transparent</span></div></div>
-          </label>
-          <label class="option-card">
-            <input type="radio" name="social" value="support_if_material">
-            <div class="card-label"><div class="radio-dot"></div><div class="card-text"><strong>Support if material</strong><span>Only when tied to financial risk or company reputation</span></div></div>
-          </label>
-          <label class="option-card">
-            <input type="radio" name="social" value="neutral">
-            <div class="card-label"><div class="radio-dot"></div><div class="card-text"><strong>Neutral</strong><span>I don't have a strong opinion on these</span></div></div>
-          </label>
-          <label class="option-card">
-            <input type="radio" name="social" value="generally_against">
-            <div class="card-label"><div class="radio-dot"></div><div class="card-text"><strong>Generally against</strong><span>Companies should focus on business, not social issues</span></div></div>
-          </label>
+      <div class="section-header">
+        <div class="section-number">3</div>
+        <h2>Social & Workplace Issues</h2>
+      </div>
+      <div class="section-body">
+        <p class="subtitle">Proposals about workers, diversity, and human rights.</p>
+        <div class="field">
+          <label class="field-label">How do you feel about shareholder proposals on workplace equity, pay gaps, and worker safety?</label>
+          <div class="option-cards">
+            <label class="option-card"><input type="radio" name="social" value="strongly_support" required><div class="card-label"><div class="radio-dot"></div><div class="card-text"><strong>Strongly support</strong><span>These issues matter and companies should be transparent</span></div></div></label>
+            <label class="option-card"><input type="radio" name="social" value="support_if_material"><div class="card-label"><div class="radio-dot"></div><div class="card-text"><strong>Support if material</strong><span>Only when tied to financial risk or company reputation</span></div></div></label>
+            <label class="option-card"><input type="radio" name="social" value="neutral"><div class="card-label"><div class="radio-dot"></div><div class="card-text"><strong>Neutral</strong><span>I don't have a strong opinion on these</span></div></div></label>
+            <label class="option-card"><input type="radio" name="social" value="generally_against"><div class="card-label"><div class="radio-dot"></div><div class="card-text"><strong>Generally against</strong><span>Companies should focus on business, not social issues</span></div></div></label>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Section 4: Governance & Compensation -->
+    <!-- Section 4 -->
     <div class="section" data-section="4">
-      <div class="section-number">4</div>
-      <h2>Executive Pay & Governance</h2>
-      <p class="subtitle">The proposals that directly affect how your company is run.</p>
-
-      <div class="field">
-        <label>At what CEO-to-median-employee pay ratio do you start voting AGAINST compensation?</label>
-        <div class="slider-field">
-          <div class="slider-labels"><span>50x — pretty reasonable</span><span>500x+ — too much</span></div>
-          <input type="range" name="pay_ratio" min="50" max="500" step="50" value="200" id="paySlider">
-          <div class="slider-value" id="payValue">200x</div>
-        </div>
+      <div class="section-header">
+        <div class="section-number">4</div>
+        <h2>Executive Pay & Governance</h2>
       </div>
+      <div class="section-body">
+        <p class="subtitle">The proposals that directly affect how your company is run.</p>
 
-      <div class="field">
-        <label>Which governance issues matter most to you? (check all that apply)</label>
-        <div class="checkbox-cards">
-          <label class="checkbox-card">
-            <input type="checkbox" name="governance" value="board_independence">
-            <div class="card-label"><div class="check-box"></div>Board independence (no insiders dominating)</div>
-          </label>
-          <label class="checkbox-card">
-            <input type="checkbox" name="governance" value="board_diversity">
-            <div class="card-label"><div class="check-box"></div>Board diversity (gender, racial, expertise)</div>
-          </label>
-          <label class="checkbox-card">
-            <input type="checkbox" name="governance" value="shareholder_rights">
-            <div class="card-label"><div class="check-box"></div>Shareholder rights (no dual-class shares, proxy access)</div>
-          </label>
-          <label class="checkbox-card">
-            <input type="checkbox" name="governance" value="lobbying_disclosure">
-            <div class="card-label"><div class="check-box"></div>Political spending & lobbying transparency</div>
-          </label>
-          <label class="checkbox-card">
-            <input type="checkbox" name="governance" value="anti_dilution">
-            <div class="card-label"><div class="check-box"></div>Limiting share dilution from stock-based comp</div>
-          </label>
+        <div class="field">
+          <label class="field-label">At what CEO-to-median-employee pay ratio do you start voting AGAINST compensation?</label>
+          <div class="slider-field">
+            <div class="slider-labels"><span>50x &mdash; reasonable</span><span>500x+ &mdash; too much</span></div>
+            <input type="range" name="pay_ratio" min="50" max="500" step="50" value="200" id="paySlider">
+            <div class="slider-value" id="payValue">200x</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Which governance issues matter most to you?</label>
+          <div class="checkbox-cards">
+            <label class="checkbox-card"><input type="checkbox" name="governance" value="board_independence"><div class="card-label"><div class="check-box"></div>Board independence (no insiders dominating)</div></label>
+            <label class="checkbox-card"><input type="checkbox" name="governance" value="board_diversity"><div class="card-label"><div class="check-box"></div>Board diversity (gender, racial, expertise)</div></label>
+            <label class="checkbox-card"><input type="checkbox" name="governance" value="shareholder_rights"><div class="card-label"><div class="check-box"></div>Shareholder rights (no dual-class shares, proxy access)</div></label>
+            <label class="checkbox-card"><input type="checkbox" name="governance" value="lobbying_disclosure"><div class="card-label"><div class="check-box"></div>Political spending & lobbying transparency</div></label>
+            <label class="checkbox-card"><input type="checkbox" name="governance" value="anti_dilution"><div class="card-label"><div class="check-box"></div>Limiting share dilution from stock-based comp</div></label>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Section 5: Voting Defaults -->
+    <!-- Section 5 -->
     <div class="section" data-section="5">
-      <div class="section-number">5</div>
-      <h2>Your Default Voting Lean</h2>
-      <p class="subtitle">When you're unsure, how should the agent lean?</p>
-
-      <div class="field">
-        <label>For routine items (auditor ratification, uncontested directors):</label>
-        <div class="option-cards">
-          <label class="option-card">
-            <input type="radio" name="routine" value="always_for" required>
-            <div class="card-label"><div class="radio-dot"></div><div class="card-text"><strong>Vote FOR unless red flags</strong><span>Trust the board on standard business</span></div></div>
-          </label>
-          <label class="option-card">
-            <input type="radio" name="routine" value="review_each">
-            <div class="card-label"><div class="radio-dot"></div><div class="card-text"><strong>Review each one</strong><span>Nothing is truly routine, check everything</span></div></div>
-          </label>
-        </div>
+      <div class="section-header">
+        <div class="section-number">5</div>
+        <h2>Your Default Voting Lean</h2>
       </div>
+      <div class="section-body">
+        <p class="subtitle">When you're unsure, how should the agent lean?</p>
 
-      <div class="field">
-        <label>For shareholder proposals asking for more disclosure:</label>
-        <div class="option-cards">
-          <label class="option-card">
-            <input type="radio" name="disclosure" value="lean_for" required>
-            <div class="card-label"><div class="radio-dot"></div><div class="card-text"><strong>Lean FOR</strong><span>More transparency is generally better</span></div></div>
-          </label>
-          <label class="option-card">
-            <input type="radio" name="disclosure" value="case_by_case">
-            <div class="card-label"><div class="radio-dot"></div><div class="card-text"><strong>Case by case</strong><span>Only if the disclosure is actionable and relevant</span></div></div>
-          </label>
-          <label class="option-card">
-            <input type="radio" name="disclosure" value="lean_against">
-            <div class="card-label"><div class="radio-dot"></div><div class="card-text"><strong>Lean AGAINST</strong><span>Too many reporting requirements burden companies</span></div></div>
-          </label>
+        <div class="field">
+          <label class="field-label">For routine items (auditor ratification, uncontested directors):</label>
+          <div class="option-cards">
+            <label class="option-card"><input type="radio" name="routine" value="always_for" required><div class="card-label"><div class="radio-dot"></div><div class="card-text"><strong>Vote FOR unless red flags</strong><span>Trust the board on standard business</span></div></div></label>
+            <label class="option-card"><input type="radio" name="routine" value="review_each"><div class="card-label"><div class="radio-dot"></div><div class="card-text"><strong>Review each one</strong><span>Nothing is truly routine, check everything</span></div></div></label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">For shareholder proposals asking for more disclosure:</label>
+          <div class="option-cards">
+            <label class="option-card"><input type="radio" name="disclosure" value="lean_for" required><div class="card-label"><div class="radio-dot"></div><div class="card-text"><strong>Lean FOR</strong><span>More transparency is generally better</span></div></div></label>
+            <label class="option-card"><input type="radio" name="disclosure" value="case_by_case"><div class="card-label"><div class="radio-dot"></div><div class="card-text"><strong>Case by case</strong><span>Only if the disclosure is actionable and relevant</span></div></div></label>
+            <label class="option-card"><input type="radio" name="disclosure" value="lean_against"><div class="card-label"><div class="radio-dot"></div><div class="card-text"><strong>Lean AGAINST</strong><span>Too many reporting requirements burden companies</span></div></div></label>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Section 6: Anything else -->
+    <!-- Section 6 -->
     <div class="section" data-section="6">
-      <div class="section-number">6</div>
-      <h2>Anything else?</h2>
-      <p class="subtitle">Optional — tell us about any specific voting rules or dealbreakers.</p>
+      <div class="section-header">
+        <div class="section-number">6</div>
+        <h2>Priorities & Custom Rules</h2>
+      </div>
+      <div class="section-body">
+        <p class="subtitle">Optional &mdash; fine-tune how the agent weighs decisions.</p>
 
-      <div class="field">
-        <label>Rank your priorities (1 = most important)</label>
-        <div class="rank-list">
-          <div class="rank-item">
-            <select name="rank_governance"><option>1</option><option>2</option><option>3</option><option selected>4</option></select>
-            Corporate governance & board accountability
-          </div>
-          <div class="rank-item">
-            <select name="rank_climate"><option>1</option><option selected>2</option><option>3</option><option>4</option></select>
-            Climate and environmental disclosure
-          </div>
-          <div class="rank-item">
-            <select name="rank_social"><option>1</option><option>2</option><option selected>3</option><option>4</option></select>
-            Worker rights and social responsibility
-          </div>
-          <div class="rank-item">
-            <select name="rank_comp"><option selected>1</option><option>2</option><option>3</option><option>4</option></select>
-            Executive compensation fairness
+        <div class="field">
+          <label class="field-label">Rank your priorities (1 = most important)</label>
+          <div class="rank-list">
+            <div class="rank-item"><select name="rank_governance"><option selected>1</option><option>2</option><option>3</option><option>4</option></select>Corporate governance & board accountability</div>
+            <div class="rank-item"><select name="rank_climate"><option>1</option><option selected>2</option><option>3</option><option>4</option></select>Climate and environmental disclosure</div>
+            <div class="rank-item"><select name="rank_social"><option>1</option><option>2</option><option selected>3</option><option>4</option></select>Worker rights and social responsibility</div>
+            <div class="rank-item"><select name="rank_comp"><option>1</option><option>2</option><option>3</option><option selected>4</option></select>Executive compensation fairness</div>
           </div>
         </div>
-      </div>
 
-      <div class="field">
-        <label>Any specific rules or dealbreakers? (optional)</label>
-        <textarea name="custom_rules" placeholder="e.g., &quot;Always vote against companies that don't disclose political spending&quot; or &quot;I never want to vote against the board on director elections&quot;"></textarea>
+        <div class="field">
+          <label class="field-label">Any specific rules or dealbreakers? (optional)</label>
+          <textarea name="custom_rules" placeholder='e.g., "Always vote against companies that don&#39;t disclose political spending" or "I never want to vote against the board on director elections"'></textarea>
+        </div>
       </div>
     </div>
 
+    <!-- Submit footer — matches output.html footer -->
     <div class="submit-section">
-      <button type="submit" class="btn-submit">Generate My Voting Profile &#x2192;</button>
-      <p class="submit-note">This creates a questionnaire.md file that the AI agent uses to vote on your behalf.</p>
+      <span class="submit-note">Your profile will be used by the agent to vote on your behalf</span>
+      <button type="submit" class="btn-submit">Generate voting profile &rarr;</button>
     </div>
   </form>
 </div>
@@ -740,14 +431,12 @@
 <div class="modal-overlay" id="resultModal">
   <div class="modal">
     <h2>Your Voting Profile</h2>
-    <p style="color: var(--muted); margin-bottom: 16px; font-size: 14px;">
-      Save this as <code style="background: var(--bg); padding: 2px 6px; border-radius: 4px;">data/questionnaire.md</code> to use with the proxy voting assistant.
-    </p>
+    <p class="modal-sub">Save this as <code style="background: #f3f4f6; padding: 1px 5px; border-radius: 3px; font-size: 12px;">data/questionnaire.md</code> to use with the proxy voting assistant.</p>
     <pre id="resultOutput"></pre>
     <div class="btn-row">
-      <button class="btn-copy" id="btnCopy">Copy to clipboard</button>
-      <button class="btn-copy" id="btnDownload" style="background: var(--green); border-color: var(--green);">Download .md</button>
-      <button class="btn-close" id="btnClose">Close</button>
+      <button class="btn-action btn-copy" id="btnCopy">Copy to clipboard</button>
+      <button class="btn-action btn-download" id="btnDownload">Download .md</button>
+      <button class="btn-action btn-close" id="btnClose">Close</button>
     </div>
   </div>
 </div>
@@ -759,14 +448,10 @@
   const sections = document.querySelectorAll('.section');
   const totalSections = sections.length;
 
-  // Pay ratio slider
   const paySlider = document.getElementById('paySlider');
   const payValue = document.getElementById('payValue');
-  paySlider.addEventListener('input', () => {
-    payValue.textContent = paySlider.value + 'x';
-  });
+  paySlider.addEventListener('input', () => { payValue.textContent = paySlider.value + 'x'; });
 
-  // Progress tracking
   function updateProgress() {
     let completed = 0;
     sections.forEach(section => {
@@ -774,21 +459,17 @@
       const radioGroups = new Set([...radios].map(r => r.name));
       let sectionDone = true;
       radioGroups.forEach(name => {
-        if (!section.querySelector(`input[name="${name}"]:checked`)) {
-          sectionDone = false;
-        }
+        if (!section.querySelector(`input[name="${name}"]:checked`)) sectionDone = false;
       });
-      if (radioGroups.size === 0) sectionDone = true; // section 6 is optional
+      if (radioGroups.size === 0) sectionDone = true;
       if (sectionDone) completed++;
     });
     const pct = Math.round((completed / totalSections) * 100);
     progressFill.style.width = pct + '%';
     progressLabel.textContent = completed + ' of ' + totalSections + ' completed';
   }
-
   form.addEventListener('change', updateProgress);
 
-  // Generate markdown
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     const data = new FormData(form);
@@ -799,48 +480,29 @@
       balanced: 'Balanced mix of growth and income with moderate risk tolerance.',
       aggressive: 'Aggressive growth, comfortable with high volatility for maximum returns.',
     };
-
-    const holdingsMap = {
-      large_cap_tech: 'Large-cap U.S. technology',
-      index_funds: 'Index funds and ETFs',
-      financials: 'Financial services',
-      consumer: 'Consumer brands',
-      energy: 'Energy sector',
-      healthcare: 'Healthcare and biotech',
-    };
-
+    const holdingsMap = { large_cap_tech: 'Large-cap U.S. technology', index_funds: 'Index funds and ETFs', financials: 'Financial services', consumer: 'Consumer brands', energy: 'Energy sector', healthcare: 'Healthcare and biotech' };
     const climateMap = {
       always_for: 'Strong supporter. Climate transparency is always beneficial for investors. Vote FOR climate disclosure proposals by default.',
       usually_for: 'Supportive. Favors consistent, decision-useful disclosure on emissions, transition planning, and climate risk oversight.',
       case_by_case: 'Case-by-case. Supports climate disclosure when cost-effective and relevant to the specific business.',
       usually_against: 'Skeptical. Climate disclosure proposals often add cost without clear shareholder benefit.',
     };
-
     const socialMap = {
       strongly_support: 'Strong supporter. Workplace equity, fair wages, and human rights transparency are important regardless of industry.',
       support_if_material: 'Supports reporting and oversight when proposals are focused, material, and actionable.',
       neutral: 'Neutral on social proposals. No strong preference either way.',
       generally_against: 'Generally opposed. Prefers companies focus on core business operations.',
     };
-
     const routineMap = {
       always_for: 'Generally FOR routine items such as auditor ratification and uncontested directors, unless there are specific governance concerns.',
       review_each: 'Reviews each proposal individually, even routine items. Nothing is rubber-stamped.',
     };
-
     const disclosureMap = {
       lean_for: 'Open to shareholder proposals that request additional disclosure rather than rigid operational mandates.',
       case_by_case: 'Evaluates disclosure proposals case-by-case based on actionability and relevance.',
       lean_against: 'Generally skeptical of additional reporting requirements that may burden operations.',
     };
-
-    const govLabels = {
-      board_independence: 'Board independence and clear accountability',
-      board_diversity: 'Board diversity in gender, race, and expertise',
-      shareholder_rights: 'Shareholder rights (opposes dual-class structures)',
-      lobbying_disclosure: 'Political spending and lobbying transparency',
-      anti_dilution: 'Limiting share dilution from stock-based compensation',
-    };
+    const govLabels = { board_independence: 'Board independence and clear accountability', board_diversity: 'Board diversity in gender, race, and expertise', shareholder_rights: 'Shareholder rights (opposes dual-class structures)', lobbying_disclosure: 'Political spending and lobbying transparency', anti_dilution: 'Limiting share dilution from stock-based compensation' };
 
     const rankings = [
       { key: 'rank_governance', label: 'Corporate governance & board accountability' },
@@ -849,75 +511,49 @@
       { key: 'rank_comp', label: 'Executive compensation fairness' },
     ];
 
-    // Build markdown
     let md = '# Investor Preference Questionnaire\n\n';
-
     md += '## Investment Style\n\n';
     md += `- Primary objective: ${goalMap[data.get('goal')] || 'Not specified.'}\n`;
     const holdings = data.getAll('holdings').map(h => holdingsMap[h]).filter(Boolean);
-    md += `- Typical holdings: ${holdings.length ? holdings.join(', ') : 'Not specified'}.\n`;
-    md += '\n';
+    md += `- Typical holdings: ${holdings.length ? holdings.join(', ') : 'Not specified'}.\n\n`;
 
     md += '## ESG and Stewardship Preferences\n\n';
     md += `- Climate disclosure: ${climateMap[data.get('climate')] || 'Not specified.'}\n`;
     md += `- Social issues: ${socialMap[data.get('social')] || 'Not specified.'}\n`;
     const govItems = data.getAll('governance').map(g => govLabels[g]).filter(Boolean);
-    md += `- Governance priorities: ${govItems.length ? govItems.join('; ') + '.' : 'No specific governance priorities selected.'}\n`;
-    md += '\n';
+    md += `- Governance priorities: ${govItems.length ? govItems.join('; ') + '.' : 'No specific governance priorities selected.'}\n\n`;
 
     md += '## Compensation Views\n\n';
     md += `- Opposes executive compensation when CEO-to-median-employee pay ratio exceeds ${data.get('pay_ratio') || '200'}x.\n`;
-    md += '- Supports compensation plans when incentives are clearly tied to durable operating performance and shareholder returns.\n';
-    md += '\n';
+    md += '- Supports compensation plans when incentives are clearly tied to durable operating performance and shareholder returns.\n\n';
 
     md += '## Default Voting Lean\n\n';
     md += `- Routine items: ${routineMap[data.get('routine')] || 'Not specified.'}\n`;
     md += `- Disclosure proposals: ${disclosureMap[data.get('disclosure')] || 'Not specified.'}\n`;
-    md += '- More skeptical of management proposals involving compensation or broad share authorization without a clear rationale.\n';
-    md += '\n';
+    md += '- More skeptical of management proposals involving compensation or broad share authorization without a clear rationale.\n\n';
 
     md += '## Priority Ranking\n\n';
-    const sorted = rankings
-      .map(r => ({ ...r, rank: parseInt(data.get(r.key)) || 4 }))
-      .sort((a, b) => a.rank - b.rank);
-    sorted.forEach((item, i) => {
-      md += `${i + 1}. ${item.label}\n`;
-    });
+    const sorted = rankings.map(r => ({ ...r, rank: parseInt(data.get(r.key)) || 4 })).sort((a, b) => a.rank - b.rank);
+    sorted.forEach((item, i) => { md += `${i + 1}. ${item.label}\n`; });
     md += '\n';
 
     const custom = data.get('custom_rules')?.trim();
-    if (custom) {
-      md += '## Additional Rules\n\n';
-      md += `- ${custom}\n`;
-    }
+    if (custom) { md += '## Additional Rules\n\n- ' + custom + '\n'; }
 
-    // Show modal
     document.getElementById('resultOutput').textContent = md;
     document.getElementById('resultModal').classList.add('active');
 
-    // Copy
     document.getElementById('btnCopy').onclick = () => {
       navigator.clipboard.writeText(md).then(() => {
         document.getElementById('btnCopy').textContent = 'Copied!';
         setTimeout(() => { document.getElementById('btnCopy').textContent = 'Copy to clipboard'; }, 2000);
       });
     };
-
-    // Download
     document.getElementById('btnDownload').onclick = () => {
       const blob = new Blob([md], { type: 'text/markdown' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'questionnaire.md';
-      a.click();
-      URL.revokeObjectURL(url);
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'questionnaire.md'; a.click(); URL.revokeObjectURL(a.href);
     };
-
-    // Close
-    document.getElementById('btnClose').onclick = () => {
-      document.getElementById('resultModal').classList.remove('active');
-    };
+    document.getElementById('btnClose').onclick = () => { document.getElementById('resultModal').classList.remove('active'); };
   });
 </script>
 </body>
