@@ -2,7 +2,7 @@
 
 | Step | Task | Owner | Status | Commit |
 |------|------|-------|--------|--------|
-| 1 | Project Scaffolding | Codex | ⬜ Not Started | — |
+| 1 | Project Scaffolding | Codex | ✅ Done | `step1: scaffold project` |
 | 2 | Sample Data | Codex | ⬜ Not Started | — |
 | 3 | Profile Generator | Claude | ⬜ Not Started | — |
 | 4 | Proposal Scraper | Codex | ⬜ Not Started | — |
@@ -13,3 +13,4 @@
 
 ## Log
 - **2026-03-28** — Plan created, work begins
+- **2026-03-28** — Step 1 complete: project scaffolding created and baseline entry point added
