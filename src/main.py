@@ -1,5 +1,8 @@
 """Main orchestrator — ties all steps together."""
 
+import json
+from pathlib import Path
+
 from rich.console import Console
 
 from src.profile_generator import generate_profile
@@ -25,7 +28,8 @@ def main():
 
     # Step 2: Scrape company proposals
     step("Scraping company proxy statements...")
-    companies = scrape_proposals()
+    urls = json.loads(Path("data/company_urls.json").read_text())
+    companies = scrape_proposals(urls)
     total = sum(len(c.get("proposals", [])) for c in companies)
     console.print(f"[green]  Found {total} proposals across {len(companies)} companies[/green]")
 

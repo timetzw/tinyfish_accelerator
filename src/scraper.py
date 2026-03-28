@@ -1,164 +1,276 @@
-"""Step 4: Scrape company proxy statements for proposals."""
+"""Scrape proxy statement proposals into the shared downstream contract."""
 
-import json
+from __future__ import annotations
+
+import logging
 import re
-from pathlib import Path
+from typing import Any
 
 import requests
 from bs4 import BeautifulSoup
+from bs4.element import NavigableString, Tag
 
+
+LOGGER = logging.getLogger(__name__)
 
 HEADERS = {
-    "User-Agent": "ProxyVotingAssistant/0.1 (educational demo)",
+    "User-Agent": "ProxyVotingAssistant/0.1 (contact: demo@example.com)",
     "Accept": "text/html,application/xhtml+xml",
 }
 
-
-URL_TICKER_MAP = {
-    "320193": ("Apple Inc.", "AAPL"),
-    "789019": ("Microsoft Corp.", "MSFT"),
-    "1318605": ("Tesla, Inc.", "TSLA"),
-    "1018724": ("Amazon.com Inc.", "AMZN"),
+NUMBER_WORDS = {
+    "one": "1",
+    "two": "2",
+    "three": "3",
+    "four": "4",
+    "five": "5",
+    "six": "6",
+    "seven": "7",
+    "eight": "8",
+    "nine": "9",
+    "ten": "10",
+    "eleven": "11",
+    "twelve": "12",
 }
 
+COMPANY_TICKERS = {
+    "apple inc.": "AAPL",
+    "microsoft corporation": "MSFT",
+    "tesla, inc.": "TSLA",
+}
 
-def _identify_company(url: str) -> tuple[str, str]:
-    """Extract company name and ticker from SEC EDGAR URL CIK number."""
-    m = re.search(r"/data/(\d+)/", url)
-    if m and m.group(1) in URL_TICKER_MAP:
-        return URL_TICKER_MAP[m.group(1)]
-    return ("Unknown Company", "UNK")
+HEADING_PATTERN = re.compile(
+    r"^Proposal(?:\s+No\.)?\s+(?P<label>\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s*"
+    r"(?:[:\-–—]\s*|\s+)(?P<title>.+)$",
+    re.IGNORECASE,
+)
+
+TITLE_CLEANUP_PATTERN = re.compile(r"\b(?:def\s*14a|schedule\s*14a)\b", re.IGNORECASE)
+TEXT_PROPOSAL_PATTERN = re.compile(
+    r"Proposal(?:\s+No\.)?\s+(?P<label>\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s*"
+    r"(?:[:\-–—]\s*|\s+)(?P<title>.+?)(?=Proposal(?:\s+No\.)?\s+(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\b|$)",
+    re.IGNORECASE,
+)
 
 
-def scrape_proposals(urls_path: str = "data/company_urls.json") -> list[dict]:
-    """Scrape proxy statements from company URLs."""
-    urls = json.loads(Path(urls_path).read_text())
-    results = []
+def scrape_proposals(urls: list[str]) -> list[dict[str, Any]]:
+    """Fetch proxy statement URLs and return structured company proposal data."""
+    results: list[dict[str, Any]] = []
 
     for url in urls:
-        company, ticker = _identify_company(url)
-
         try:
-            resp = requests.get(url, headers=HEADERS, timeout=30)
-            resp.raise_for_status()
-            proposals = _extract_proposals(resp.text, url)
-            results.append({
-                "company": company,
-                "ticker": ticker,
-                "proposals": proposals,
-                "source_url": url,
-            })
-        except Exception as e:
-            print(f"[warning] Failed to scrape {company}: {e}")
-            results.append(_fallback_data(company, ticker, url))
+            response = requests.get(url, headers=HEADERS, timeout=30)
+            response.raise_for_status()
+
+            soup = BeautifulSoup(response.text, "html.parser")
+            company = _extract_company_name(soup)
+            ticker = _extract_ticker(soup, company, response.text)
+            proposals = _extract_proposals(soup, url)
+
+            if not proposals:
+                LOGGER.warning("No proposals parsed from %s", url)
+                continue
+
+            results.append(
+                {
+                    "company": company,
+                    "ticker": ticker,
+                    "proposals": proposals,
+                }
+            )
+        except requests.RequestException as exc:
+            LOGGER.warning("Failed to fetch %s: %s", url, exc)
+        except Exception as exc:  # noqa: BLE001
+            LOGGER.warning("Failed to parse %s: %s", url, exc)
 
     return results
 
 
-def _extract_proposals(html: str, source_url: str) -> list[dict]:
-    """Extract proposal sections from proxy statement HTML."""
-    soup = BeautifulSoup(html, "html.parser")
-    text = soup.get_text(separator="\n", strip=True)
+def _extract_company_name(soup: BeautifulSoup) -> str:
+    entity_tag = soup.find(attrs={"name": re.compile(r"dei:EntityRegistrantName$", re.IGNORECASE)})
+    if entity_tag:
+        return _normalize_company_name(entity_tag.get_text(" ", strip=True))
 
-    # Look for common proxy statement patterns
-    proposals = []
-    # Pattern: "Proposal 1", "Proposal 2", "Item 1", etc.
-    pattern = r"(?:Proposal|Item)\s+(\d+)[:\s\-—]+(.+?)(?=(?:Proposal|Item)\s+\d+|$)"
-    matches = re.findall(pattern, text, re.IGNORECASE | re.DOTALL)
+    if soup.title and soup.title.string:
+        cleaned = TITLE_CLEANUP_PATTERN.sub("", soup.title.string)
+        cleaned = cleaned.replace("-", " ").strip()
+        cleaned = re.sub(r"\s+", " ", cleaned).strip()
+        if cleaned:
+            return _normalize_company_name(cleaned)
 
-    for i, (num, content) in enumerate(matches[:10]):  # cap at 10 proposals
-        lines = content.strip().split("\n")
-        title = lines[0].strip()[:200]
-        full_text = "\n".join(lines[:50]).strip()  # first 50 lines as context
-
-        proposals.append({
-            "id": str(num),
-            "title": title,
-            "full_text": full_text[:3000],  # cap text length
-            "source_url": source_url,
-        })
-
-    # If regex didn't find proposals, try a simpler heading-based approach
-    if not proposals:
-        proposals = _extract_from_headings(soup, source_url)
-
-    # If still nothing, return a placeholder
-    if not proposals:
-        proposals = [{"id": "1", "title": "Could not parse proposals", "full_text": text[:3000], "source_url": source_url}]
-
-    return proposals
+    return "Unknown Company"
 
 
-def _extract_from_headings(soup: BeautifulSoup, source_url: str) -> list[dict]:
-    """Fallback: extract proposals from HTML headings."""
-    proposals = []
-    headings = soup.find_all(["h1", "h2", "h3", "h4", "b", "strong"])
+def _extract_ticker(soup: BeautifulSoup, company: str, html: str) -> str:
+    trading_symbol = soup.find(attrs={"name": re.compile(r"dei:TradingSymbol$", re.IGNORECASE)})
+    if trading_symbol:
+        symbol = _normalize_text(trading_symbol.get_text(" ", strip=True)).upper()
+        if symbol:
+            return symbol
 
-    for h in headings:
-        text = h.get_text(strip=True)
-        if re.search(r"proposal|resolution|item\s+\d", text, re.IGNORECASE):
-            # Get following text
-            following = []
-            for sib in h.find_all_next(string=True):
-                if sib.parent.name in ["h1", "h2", "h3", "h4"] and sib != h.string:
-                    break
-                following.append(sib.strip())
-                if len(following) > 30:
-                    break
-            full_text = "\n".join(following).strip()
+    patterns = [
+        r"virtualshareholdermeeting\.com/([A-Z]{1,6})\d{2,4}",
+        r"under the symbol [\"“]?([A-Z.\-]{1,6})[\"”]?",
+        r"\((?:NASDAQ|NYSE):\s*([A-Z.\-]{1,6})\)",
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, html, re.IGNORECASE)
+        if match:
+            return match.group(1).upper()
 
-            num = re.search(r"\d+", text)
-            proposals.append({
-                "id": num.group() if num else str(len(proposals) + 1),
-                "title": text[:200],
-                "full_text": full_text[:3000],
+    return COMPANY_TICKERS.get(company.lower(), "UNKNOWN")
+
+
+def _extract_proposals(soup: BeautifulSoup, source_url: str) -> list[dict[str, str]]:
+    proposal_targets = _find_proposal_targets(soup)
+    if proposal_targets:
+        return _extract_target_sections(proposal_targets, source_url)
+
+    return _extract_text_fallback(soup, source_url)
+
+
+def _find_proposal_targets(soup: BeautifulSoup) -> list[dict[str, Any]]:
+    seen_targets: set[str] = set()
+    targets: list[dict[str, Any]] = []
+
+    for anchor in soup.find_all("a", href=True):
+        href = anchor.get("href", "")
+        if not href.startswith("#") or len(href) == 1:
+            continue
+
+        parsed = _parse_proposal_heading(anchor.get_text(" ", strip=True))
+        if not parsed:
+            continue
+
+        target_id = href[1:]
+        if target_id in seen_targets:
+            continue
+
+        start_tag = soup.find(id=target_id)
+        if start_tag is None:
+            continue
+
+        parsed["target_id"] = target_id
+        parsed["start_tag"] = start_tag
+        targets.append(parsed)
+        seen_targets.add(target_id)
+
+    return targets
+
+
+def _extract_target_sections(
+    proposal_targets: list[dict[str, Any]],
+    source_url: str,
+) -> list[dict[str, str]]:
+    stop_ids = [target["target_id"] for target in proposal_targets]
+    proposals: list[dict[str, str]] = []
+
+    for target in proposal_targets:
+        section_text = _collect_section_text(target["start_tag"], target["target_id"], stop_ids)
+        if not section_text:
+            continue
+
+        proposals.append(
+            {
+                "id": target["id"],
+                "title": target["title"],
+                "full_text": section_text,
                 "source_url": source_url,
-            })
+            }
+        )
 
     return proposals
 
 
-def _fallback_data(company: str, ticker: str, url: str) -> dict:
-    """Provide realistic demo data when scraping fails."""
-    fallbacks = {
-        "AAPL": {
-            "company": "Apple Inc.",
-            "ticker": "AAPL",
-            "source_url": url,
-            "proposals": [
-                {"id": "1", "title": "Election of Directors", "full_text": "The Board recommends a vote FOR the election of each of the following nominees as directors: Tim Cook, Al Gore, Andrea Jung, Art Levinson, Monica Lozano, Ron Sugar, Sue Wagner, and Jeff Williams. Each director will serve a one-year term.", "source_url": url},
-                {"id": "2", "title": "Ratification of Auditors (Ernst & Young LLP)", "full_text": "The Audit Committee has selected Ernst & Young LLP as Apple's independent registered public accounting firm for fiscal year 2026. EY has served as Apple's auditor since 2009. Audit fees for 2025 were $28.3 million.", "source_url": url},
-                {"id": "3", "title": "Advisory Vote on Executive Compensation", "full_text": "CEO Tim Cook received total compensation of $63.2 million in 2025, including base salary of $3M, stock awards of $58M, and other compensation. Median employee compensation was $94,118, resulting in a CEO pay ratio of 672:1.", "source_url": url},
-                {"id": "4", "title": "Shareholder Proposal — Report on AI Ethics and Civil Rights Impact", "full_text": "Shareholders request that Apple publish an annual report assessing the civil rights and ethical impacts of its AI products and services, including facial recognition, Siri, and content moderation algorithms.", "source_url": url},
-                {"id": "5", "title": "Shareholder Proposal — Climate Lobbying Report", "full_text": "Shareholders request Apple disclose its direct and indirect lobbying activities related to climate change legislation, including trade association memberships and political spending that may contradict Apple's stated climate commitments.", "source_url": url},
-            ],
-        },
-        "MSFT": {
-            "company": "Microsoft Corp.",
-            "ticker": "MSFT",
-            "source_url": url,
-            "proposals": [
-                {"id": "1", "title": "Election of Directors", "full_text": "The Board recommends a vote FOR each of its 12 director nominees including Satya Nadella, Reid Hoffman, and Penny Pritzker. The Board is committed to diversity with 42% women and 25% underrepresented minorities.", "source_url": url},
-                {"id": "2", "title": "Advisory Vote on Executive Compensation", "full_text": "CEO Satya Nadella received total compensation of $79.1 million, including base salary of $2.5M, stock awards of $71M. The compensation committee notes strong performance with 22% revenue growth. CEO pay ratio is 289:1.", "source_url": url},
-                {"id": "3", "title": "Ratification of Deloitte & Touche as Auditors", "full_text": "The Audit Committee has selected Deloitte & Touche LLP to serve as Microsoft's independent auditor for fiscal 2026. Deloitte has served as auditor since 1983. Total audit fees were $44.8 million.", "source_url": url},
-                {"id": "4", "title": "Shareholder Proposal — Report on Government Contracts and Human Rights", "full_text": "Shareholders request Microsoft report on due diligence processes to determine whether its technology, including AI and cloud services sold to government agencies, contributes to human rights violations.", "source_url": url},
-                {"id": "5", "title": "Shareholder Proposal — Gender and Racial Pay Equity Report", "full_text": "Shareholders request Microsoft publish median pay gap data broken down by gender and race, including base salary, bonuses, and equity compensation, to assess progress on pay equity commitments.", "source_url": url},
-            ],
-        },
-        "AMZN": {
-            "company": "Amazon.com Inc.",
-            "ticker": "AMZN",
-            "source_url": url,
-            "proposals": [
-                {"id": "1", "title": "Election of Directors", "full_text": "The Board recommends a vote FOR all 10 director nominees including Andy Jassy and Jeff Bezos. Shareholders have raised concerns about board independence given Bezos's continued influence.", "source_url": url},
-                {"id": "2", "title": "Advisory Vote on Executive Compensation", "full_text": "CEO Andy Jassy received total compensation of $29.2 million, primarily in stock awards. The Board notes this is below median for peer companies. CEO pay ratio is 41:1.", "source_url": url},
-                {"id": "3", "title": "Shareholder Proposal — Warehouse Worker Safety Audit", "full_text": "Shareholders request an independent audit of working conditions in Amazon warehouses, including injury rates, productivity quotas, and the impact of automated monitoring on worker health and safety.", "source_url": url},
-                {"id": "4", "title": "Shareholder Proposal — Report on Plastic Packaging", "full_text": "Shareholders request Amazon report on efforts to reduce plastic packaging across its operations, including quantitative targets and timelines for transitioning to sustainable packaging materials.", "source_url": url},
-                {"id": "5", "title": "Shareholder Proposal — Tax Transparency Report", "full_text": "Shareholders request Amazon adopt and publish a tax transparency report consistent with GRI Tax Standard 207, including country-by-country reporting of revenues, profits, and taxes paid.", "source_url": url},
-            ],
-        },
+def _collect_section_text(start_tag: Tag, current_id: str, stop_ids: list[str]) -> str:
+    parts: list[str] = []
+    stop_id_set = set(stop_ids)
+    current_length = 0
+
+    for element in start_tag.next_elements:
+        if isinstance(element, Tag):
+            element_id = element.get("id")
+            if element_id and element_id != current_id and element_id in stop_id_set:
+                break
+            continue
+
+        if not isinstance(element, NavigableString):
+            continue
+
+        parent = element.parent
+        if parent is None:
+            continue
+
+        if parent == start_tag or start_tag in parent.parents:
+            continue
+
+        text = _normalize_text(str(element))
+        if not text:
+            continue
+        if parts and parts[-1] == text:
+            continue
+
+        parts.append(text)
+        current_length += len(text) + 1
+        if current_length >= 6000:
+            break
+
+    return " ".join(parts)[:6000].strip()
+
+
+def _extract_text_fallback(soup: BeautifulSoup, source_url: str) -> list[dict[str, str]]:
+    text = _normalize_text(soup.get_text("\n", strip=True))
+    matches = list(TEXT_PROPOSAL_PATTERN.finditer(text))
+    proposals: list[dict[str, str]] = []
+
+    for index, match in enumerate(matches):
+        start = match.end()
+        end = matches[index + 1].start() if index + 1 < len(matches) else min(len(text), start + 6000)
+        proposal_id = _normalize_proposal_id(match.group("label"))
+        title = _normalize_text(match.group("title"))
+        full_text = _normalize_text(text[start:end])[:6000]
+        if not title or not full_text:
+            continue
+
+        proposals.append(
+            {
+                "id": proposal_id,
+                "title": title,
+                "full_text": full_text,
+                "source_url": source_url,
+            }
+        )
+
+    return proposals
+
+
+def _parse_proposal_heading(text: str) -> dict[str, Any] | None:
+    normalized = _normalize_text(text)
+    match = HEADING_PATTERN.match(normalized)
+    if not match:
+        return None
+
+    title = _normalize_text(match.group("title"))
+    if not title or title.lower() == "shareholder proposals":
+        return None
+
+    return {
+        "id": _normalize_proposal_id(match.group("label")),
+        "title": title,
     }
-    return fallbacks.get(ticker, {
-        "company": company, "ticker": ticker, "source_url": url,
-        "proposals": [{"id": "1", "title": "No data available", "full_text": "Could not retrieve proposals.", "source_url": url}],
-    })
+
+
+def _normalize_company_name(name: str) -> str:
+    normalized = _normalize_text(name)
+    return normalized.title() if normalized.isupper() else normalized
+
+
+def _normalize_proposal_id(label: str) -> str:
+    cleaned = _normalize_text(label).lower()
+    return NUMBER_WORDS.get(cleaned, cleaned)
+
+
+def _normalize_text(value: str) -> str:
+    value = value.replace("\xa0", " ").replace("\u2009", " ")
+    value = re.sub(r"\s+", " ", value)
+    return value.strip()
