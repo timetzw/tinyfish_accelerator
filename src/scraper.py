@@ -1,4 +1,8 @@
-"""Scrape proxy statement proposals using TinyFish Web Agent (with requests+BS4 fallback)."""
+"""Scrape proxy statement proposals using TinyFish Web Agent + BeautifulSoup.
+
+TinyFish handles URL discovery from SEC EDGAR (browser automation).
+BeautifulSoup handles HTML parsing of the actual proxy statements.
+"""
 
 from __future__ import annotations
 
@@ -24,10 +28,8 @@ LOGGER = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 TINYFISH_API_URL = "https://agent.tinyfish.ai/v1/automation/run-sse"
 
-TINYFISH_GOAL = "Get the full text content of this SEC filing page. Return all the text exactly as it appears."
-
 # ---------------------------------------------------------------------------
-# Fallback: requests + BeautifulSoup constants
+# requests + BeautifulSoup constants
 # ---------------------------------------------------------------------------
 HEADERS = {
     "User-Agent": "ProxyVotingAssistant/0.1 (contact: demo@example.com)",
@@ -48,93 +50,91 @@ COMPANY_TICKERS = {
 
 HEADING_PATTERN = re.compile(
     r"^Proposal(?:\s+No\.)?\s+(?P<label>\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s*"
-    r"(?:[:\-–—]\s*|\s+)(?P<title>.+)$",
+    r"(?:[:\-\u2013\u2014]\s*|\s+)(?P<title>.+)$",
     re.IGNORECASE,
 )
 
 TITLE_CLEANUP_PATTERN = re.compile(r"\b(?:def\s*14a|schedule\s*14a)\b", re.IGNORECASE)
 TEXT_PROPOSAL_PATTERN = re.compile(
     r"Proposal(?:\s+No\.)?\s+(?P<label>\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s*"
-    r"(?:[:\-–—]\s*|\s+)(?P<title>.+?)(?=Proposal(?:\s+No\.)?\s+(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\b|$)",
+    r"(?:[:\-\u2013\u2014]\s*|\s+)(?P<title>.+?)(?=Proposal(?:\s+No\.)?\s+(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\b|$)",
     re.IGNORECASE,
 )
 
 
 # ===================================================================
-# Public entry point
+# TinyFish: Discover proxy statement URLs for a company ticker
 # ===================================================================
 
-def scrape_proposals(urls: list[str]) -> list[dict[str, Any]]:
-    """Fetch proxy statement URLs and return structured company proposal data.
+def discover_proxy_urls(tickers: list[str]) -> list[str]:
+    """Use TinyFish to find DEF 14A proxy statement URLs on SEC EDGAR.
 
-    Uses TinyFish Web Agent API when TINYFISH_API_KEY is set,
-    otherwise falls back to direct HTTP requests + BeautifulSoup parsing.
+    Returns a list of URLs, one per ticker. Falls back gracefully if
+    TinyFish is unavailable.
     """
     api_key = os.getenv("TINYFISH_API_KEY")
-    if api_key:
-        LOGGER.info("Using TinyFish Web Agent for scraping")
-        return _scrape_all_tinyfish(urls, api_key)
+    if not api_key:
+        LOGGER.info("TINYFISH_API_KEY not set — skipping URL discovery")
+        return []
 
-    LOGGER.info("TINYFISH_API_KEY not set — falling back to requests + BeautifulSoup")
-    return _scrape_all_requests(urls)
+    LOGGER.info("Using TinyFish to discover proxy statement URLs for %s", tickers)
+    urls: list[str] = []
 
-
-# ===================================================================
-# TinyFish path
-# ===================================================================
-
-def _scrape_all_tinyfish(urls: list[str], api_key: str) -> list[dict[str, Any]]:
-    """Fetch all URLs via TinyFish in parallel, then parse with BeautifulSoup."""
-    results: list[dict[str, Any]] = []
-    url_to_html: dict[str, str] = {}
-
-    # Fetch all pages in parallel through TinyFish
-    with ThreadPoolExecutor(max_workers=len(urls)) as pool:
-        futures = {pool.submit(_tinyfish_fetch_html, url, api_key): url for url in urls}
+    with ThreadPoolExecutor(max_workers=min(len(tickers), 8)) as pool:
+        futures = {pool.submit(_discover_single, ticker, api_key): ticker for ticker in tickers}
+        ticker_to_url: dict[str, str] = {}
         for future in as_completed(futures):
-            url = futures[future]
+            ticker = futures[future]
             try:
-                html = future.result()
-                if html:
-                    url_to_html[url] = html
-                else:
-                    LOGGER.warning("TinyFish returned empty for %s, trying fallback", url)
+                url = future.result()
+                if url:
+                    ticker_to_url[ticker] = url
             except Exception as exc:  # noqa: BLE001
-                LOGGER.warning("TinyFish failed for %s: %s — trying fallback", url, exc)
+                LOGGER.warning("TinyFish discovery failed for %s: %s", ticker, exc)
 
-    # Parse fetched HTML with BeautifulSoup; fallback to requests for failures
-    for url in urls:
-        html = url_to_html.get(url)
-        if html:
-            company_data = _parse_html(html, url)
-            if company_data:
-                results.append(company_data)
-                continue
-        # Fallback
-        fallback = _scrape_single_request(url)
-        if fallback:
-            results.append(fallback)
+    # Preserve input order
+    for ticker in tickers:
+        if ticker in ticker_to_url:
+            urls.append(ticker_to_url[ticker])
 
-    return results
+    return urls
 
 
-def _tinyfish_fetch_html(url: str, api_key: str) -> str | None:
-    """Call TinyFish REST API to fetch page content from a single URL."""
+def _discover_single(ticker: str, api_key: str) -> str | None:
+    """Use TinyFish to find the latest DEF 14A URL for one ticker."""
+    goal = (
+        f"Go to SEC EDGAR and find the most recent DEF 14A (proxy statement) filing "
+        f"for the company with ticker symbol {ticker}. "
+        f"Navigate to the filing page and find the direct URL to the HTML document "
+        f"(the .htm file, not the index page). Return ONLY the full URL, nothing else."
+    )
+    result = _tinyfish_call(
+        url="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany"
+            f"&company=&CIK={ticker}&type=DEF+14A&dateb=&owner=include&count=5&search_text=&action=getcompany",
+        goal=goal,
+        api_key=api_key,
+    )
+    if result and result.startswith("http"):
+        return result.strip()
+    return None
+
+
+def _tinyfish_call(url: str, goal: str, api_key: str) -> str | None:
+    """Make a single TinyFish REST API call and return the result text."""
     headers = {
         "Content-Type": "application/json",
         "X-API-Key": api_key,
     }
     payload = {
         "url": url,
-        "goal": TINYFISH_GOAL,
+        "goal": goal,
         "session_id": str(uuid.uuid4()),
         "browser_profile": "lite",
     }
 
-    resp = requests.post(TINYFISH_API_URL, json=payload, headers=headers, stream=True, timeout=180)
+    resp = requests.post(TINYFISH_API_URL, json=payload, headers=headers, stream=True, timeout=120)
     resp.raise_for_status()
 
-    # Parse SSE stream — the COMPLETE event has {"result": {"result": "..."}}
     result_text = None
     for line in resp.iter_lines(decode_unicode=True):
         if not line or not line.startswith("data: "):
@@ -159,63 +159,45 @@ def _tinyfish_fetch_html(url: str, api_key: str) -> str | None:
     return result_text or None
 
 
-def _parse_html(html: str, source_url: str) -> dict[str, Any] | None:
-    """Parse raw HTML into the downstream company/proposals data contract."""
-    try:
-        soup = BeautifulSoup(html, "html.parser")
-        company = _extract_company_name(soup)
-        ticker = _extract_ticker(soup, company, html)
-        proposals = _extract_proposals(soup, source_url)
-        if not proposals:
-            return None
-        return {"company": company, "ticker": ticker, "proposals": proposals}
-    except Exception as exc:  # noqa: BLE001
-        LOGGER.warning("Failed to parse HTML for %s: %s", source_url, exc)
-        return None
-
-
 # ===================================================================
-# Fallback: requests + BeautifulSoup path
+# Public entry point: scrape proposals from given URLs
 # ===================================================================
 
-def _scrape_all_requests(urls: list[str]) -> list[dict[str, Any]]:
+def scrape_proposals(urls: list[str]) -> list[dict[str, Any]]:
+    """Fetch proxy statement URLs and return structured company proposal data."""
     results: list[dict[str, Any]] = []
+
     for url in urls:
-        company_data = _scrape_single_request(url)
-        if company_data:
-            results.append(company_data)
+        try:
+            response = requests.get(url, headers=HEADERS, timeout=30)
+            response.raise_for_status()
+
+            soup = BeautifulSoup(response.text, "html.parser")
+            company = _extract_company_name(soup)
+            ticker = _extract_ticker(soup, company, response.text)
+            proposals = _extract_proposals(soup, url)
+
+            if not proposals:
+                LOGGER.warning("No proposals parsed from %s", url)
+                continue
+
+            results.append(
+                {
+                    "company": company,
+                    "ticker": ticker,
+                    "proposals": proposals,
+                }
+            )
+        except requests.RequestException as exc:
+            LOGGER.warning("Failed to fetch %s: %s", url, exc)
+        except Exception as exc:  # noqa: BLE001
+            LOGGER.warning("Failed to parse %s: %s", url, exc)
+
     return results
 
 
-def _scrape_single_request(url: str) -> dict[str, Any] | None:
-    """Fetch and parse a single proxy statement URL with requests + BS4."""
-    try:
-        response = requests.get(url, headers=HEADERS, timeout=30)
-        response.raise_for_status()
-
-        soup = BeautifulSoup(response.text, "html.parser")
-        company = _extract_company_name(soup)
-        ticker = _extract_ticker(soup, company, response.text)
-        proposals = _extract_proposals(soup, url)
-
-        if not proposals:
-            LOGGER.warning("No proposals parsed from %s", url)
-            return None
-
-        return {
-            "company": company,
-            "ticker": ticker,
-            "proposals": proposals,
-        }
-    except requests.RequestException as exc:
-        LOGGER.warning("Failed to fetch %s: %s", url, exc)
-    except Exception as exc:  # noqa: BLE001
-        LOGGER.warning("Failed to parse %s: %s", url, exc)
-    return None
-
-
 # ===================================================================
-# BeautifulSoup helpers (unchanged)
+# BeautifulSoup helpers
 # ===================================================================
 
 def _extract_company_name(soup: BeautifulSoup) -> str:
@@ -242,7 +224,7 @@ def _extract_ticker(soup: BeautifulSoup, company: str, html: str) -> str:
 
     patterns = [
         r"virtualshareholdermeeting\.com/([A-Z]{1,6})\d{2,4}",
-        r'under the symbol ["“]?([A-Z.\-]{1,6})["”]?',
+        r'under the symbol ["\u201c]?([A-Z.\-]{1,6})["\u201d]?',
         r"\((?:NASDAQ|NYSE):\s*([A-Z.\-]{1,6})\)",
     ]
     for pattern in patterns:
