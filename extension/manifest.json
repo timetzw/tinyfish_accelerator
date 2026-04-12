@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "AI Proxy Voting Assistant",
+  "version": "0.0.3",
+  "description": "Analyzes ProxyVote ballots and suggests votes aligned with your personal investment profile.",
+  "permissions": ["storage", "tabs"],
+  "host_permissions": ["*://*.proxyvote.com/*"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "AI Proxy Voting Assistant"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.proxyvote.com/*"],
+      "js": [
+        "keys.js",
+        "adapter.js",
+        "autofill.js",
+        "injector.js",
+        "decision-stub.js",
+        "content.js"
+      ],
+      "css": ["styles.css"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["questionnaire.html"],
+      "matches": ["*://*.proxyvote.com/*"]
+    }
+  ]
+}

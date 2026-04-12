@@ -1,0 +1,122 @@
+.aipv-block {
+  margin: 6px 0 14px 0 !important;
+  padding: 0 !important;
+  font-family: inherit;
+}
+
+.aipv-block .aipv-inner {
+  padding: 10px 14px;
+  border-left: 3px solid #8a8a8a;
+  background: #f7f8fa;
+  border-radius: 0 4px 4px 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #333;
+}
+
+.aipv-block.aipv-loading .aipv-inner {
+  border-left-color: #8a8a8a;
+  background: #f2f3f5;
+  color: #666;
+}
+
+.aipv-block.aipv-for .aipv-inner {
+  border-left-color: #2e7d32;
+  background: #f1f8f2;
+}
+
+.aipv-block.aipv-against .aipv-inner {
+  border-left-color: #c62828;
+  background: #fdf3f3;
+}
+
+.aipv-block.aipv-abstain .aipv-inner {
+  border-left-color: #f9a825;
+  background: #fdf8ed;
+}
+
+.aipv-block.aipv-error .aipv-inner {
+  border-left-color: #6a1b9a;
+  background: #f6f0fa;
+}
+
+.aipv-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.aipv-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #666;
+}
+
+.aipv-value {
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.aipv-for .aipv-value {
+  color: #2e7d32;
+}
+.aipv-against .aipv-value {
+  color: #c62828;
+}
+.aipv-abstain .aipv-value {
+  color: #f9a825;
+}
+.aipv-loading .aipv-value {
+  color: #888;
+  font-weight: 500;
+  font-style: italic;
+}
+.aipv-error .aipv-value {
+  color: #6a1b9a;
+}
+
+.aipv-dots {
+  display: inline-block;
+  animation: aipv-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes aipv-pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+.aipv-toggle {
+  margin-left: auto;
+  background: transparent;
+  border: 1px solid #bbb;
+  border-radius: 3px;
+  padding: 2px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  color: #444;
+  font-family: inherit;
+}
+
+.aipv-toggle:hover {
+  background: #fff;
+  border-color: #888;
+}
+
+.aipv-explain {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  color: #333;
+}
+
+.aipv-marker {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #c2570f;
+  vertical-align: middle;
+}

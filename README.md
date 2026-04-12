@@ -57,6 +57,60 @@ An AI agent that acts as your proxy voting representative:
                          └─────────────────────┘
 ```
 
+## Chrome Extension
+
+The primary user-facing product is a Chrome extension that runs on proxy voting pages and suggests votes aligned with your personal profile. The Python pipeline above is the analysis engine that will soon power it server-side.
+
+### Installation
+
+1. Open `chrome://extensions` in Chrome
+2. Toggle **Developer mode** (top right)
+3. Click **Load unpacked** → select the `extension/` folder in this repo
+4. Pin the extension from the puzzle-piece menu for easy access
+
+### Usage workflow
+
+1. **Build your voting profile.** Click the extension icon → **Start questionnaire**. Answer eight questions about your role, investment horizon, ESG stance, governance priorities, executive pay tolerance, shareholder rights stance, climate disclosure preference, and default bias. Answers are saved locally via `chrome.storage.local` along with an auto-generated summary paragraph.
+2. **Visit a proxy ballot.** Navigate to your broker's proxy voting link — Fidelity, Schwab, Vanguard, Merrill, etc. all route through `proxyvote.com`. The extension activates automatically when it detects ballot rows.
+3. **Watch the AI recommendations appear.** For each proposal the extension injects an **AI Recommendation** block below the row:
+   - Grey **Analyzing…** skeleton while the decision is pending
+   - Colored badge (green FOR / red AGAINST / yellow ABSTAIN) once ready
+   - **Why?** toggle that expands the agent's reasoning
+   - The matching radio button is pre-filled with a `· AI` marker next to the label
+4. **Override anything you disagree with.** Click any other radio to change the vote — the AI marker moves to whatever you select.
+5. **Submit the ballot** using ProxyVote's own Submit button. The extension never auto-submits.
+6. **Check the popup anytime.** Click the extension icon to see live status, your profile summary, key preferences, and weekly usage counter. Click **Retake questionnaire** to update your preferences.
+
+### Popup dashboard
+
+The extension popup surfaces:
+- **Status** — whether the current tab is on `proxyvote.com` (green dot) or idle
+- **Voting profile** — the generated summary plus a key/value list of each answer (ESG, governance, exec pay, etc.)
+- **Usage** — ballots analyzed in the past 7 days against the free-tier limit (3 per week)
+- **Start / Retake questionnaire** — opens the questionnaire form in a new tab
+
+### Current status
+
+The end-to-end pipeline is wired with **mock decisions** that apply heuristics over the user's profile. Every recommendation is currently tagged `[MOCK]` in the reasoning text. The Python backend (TinyFish research + DeepSeek summarization + voting agent) is not yet called from the extension — that wiring is the next milestone, alongside a background-worker job queue and server-side profile sync.
+
+### Extension file layout
+
+```
+extension/
+├── manifest.json            # MV3 manifest, content scripts, popup action
+├── background.js            # Service worker (future: job queue)
+├── content.js               # Orchestrator on proxyvote.com tabs
+├── adapter.js               # ProxyVote DOM extraction (selectors)
+├── keys.js                  # Stable SHA-256 ballot keys
+├── autofill.js              # Radio auto-fill with native events + AI marker
+├── injector.js              # AI recommendation block rendering
+├── decision-stub.js         # Mock decision engine (temporary)
+├── styles.css               # Styles injected into proxyvote.com pages
+├── ui.css                   # Popup + questionnaire styles
+├── popup.html, popup.js     # Extension popup UI
+└── questionnaire.html, questionnaire.js  # Onboarding form
+```
+
 ## Project Structure
 
 ```

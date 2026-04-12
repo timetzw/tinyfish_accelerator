@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Voting Profile Questionnaire</title>
+    <link rel="stylesheet" href="ui.css" />
+  </head>
+  <body class="aipv-questionnaire">
+    <div class="aipv-q-wrap">
+      <div class="aipv-q-header">
+        <h1>Build Your Voting Profile</h1>
+        <p>
+          Eight quick questions. Your answers shape how the AI votes on proxy
+          proposals on your behalf. You can retake this at any time from the
+          extension popup.
+        </p>
+      </div>
+
+      <form id="aipv-q-form">
+        <div id="aipv-q-container"></div>
+
+        <div class="aipv-q-actions">
+          <button type="submit" class="aipv-btn aipv-btn-primary">
+            Save profile
+          </button>
+          <button type="button" id="aipv-q-cancel" class="aipv-btn">
+            Cancel
+          </button>
+        </div>
+
+        <div id="aipv-q-success" class="aipv-q-success">
+          <strong>Profile saved.</strong>
+          <p id="aipv-q-success-summary" style="margin: 8px 0 0"></p>
+          <p style="margin: 12px 0 0; font-size: 12.5px; color: #2e7d32">
+            You can close this tab. Open the extension popup to see your
+            profile summary anytime.
+          </p>
+        </div>
+      </form>
+    </div>
+
+    <script src="questionnaire.js"></script>
+  </body>
+</html>

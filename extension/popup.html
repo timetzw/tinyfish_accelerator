@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>AI Proxy Voting Assistant</title>
+    <link rel="stylesheet" href="ui.css" />
+  </head>
+  <body class="aipv-popup">
+    <div class="aipv-popup-header">
+      <h1 class="aipv-popup-title">AI Proxy Voting Assistant</h1>
+      <p class="aipv-popup-subtitle">Vote aligned with your values</p>
+    </div>
+
+    <section class="aipv-section">
+      <p class="aipv-section-title">Status</p>
+      <div class="aipv-status-line">
+        <span id="aipv-status-dot" class="aipv-dot aipv-dot-idle"></span>
+        <span id="aipv-status-text">Checking current tab…</span>
+      </div>
+    </section>
+
+    <section class="aipv-section">
+      <p class="aipv-section-title">Your Voting Profile</p>
+      <p id="aipv-profile-summary" class="aipv-profile-empty">
+        Take the 2-minute questionnaire to build your voting profile.
+      </p>
+      <ul id="aipv-prefs" class="aipv-prefs" hidden></ul>
+      <button id="aipv-questionnaire-btn" class="aipv-btn aipv-btn-primary">
+        Start questionnaire
+      </button>
+    </section>
+
+    <section class="aipv-section">
+      <p class="aipv-section-title">Usage</p>
+      <div class="aipv-usage-line">
+        <span>Ballots analyzed this week</span>
+        <span id="aipv-usage-count">0 / 3</span>
+      </div>
+      <div class="aipv-usage-bar">
+        <div id="aipv-usage-fill" class="aipv-usage-fill" style="width: 0%"></div>
+      </div>
+      <p class="aipv-footnote">Free tier: 3 ballots / 7 days (placeholder).</p>
+    </section>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
