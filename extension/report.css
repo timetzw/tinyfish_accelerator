@@ -1,0 +1,272 @@
+body.aipv-report {
+  background: #f7f8fa;
+  color: #1f2328;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  margin: 0;
+}
+
+.aipv-report-header {
+  background: #fff;
+  border-bottom: 1px solid #e4e7eb;
+}
+
+.aipv-report-header-inner {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.aipv-report-header h1 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.aipv-muted-sub {
+  margin: 4px 0 0;
+  color: #6a7280;
+  font-size: 13px;
+}
+
+.aipv-report-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.aipv-report-actions .aipv-btn {
+  width: auto;
+  padding: 6px 12px;
+  font-size: 12.5px;
+}
+
+.aipv-report-main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.aipv-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.aipv-stat {
+  background: #fff;
+  border: 1px solid #e4e7eb;
+  border-radius: 8px;
+  padding: 14px;
+  text-align: center;
+}
+
+.aipv-stat-num {
+  display: block;
+  font-size: 22px;
+  font-weight: 700;
+  color: #1f2328;
+}
+
+.aipv-stat-label {
+  display: block;
+  font-size: 11px;
+  color: #6a7280;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 4px;
+}
+
+.aipv-stat-override {
+  color: #c2570f;
+}
+
+.aipv-empty {
+  text-align: center;
+  padding: 60px 0;
+  color: #6a7280;
+  font-size: 14px;
+}
+
+/* ballot list */
+.aipv-ballot-card {
+  background: #fff;
+  border: 1px solid #e4e7eb;
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.aipv-ballot-card h3 {
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+
+.aipv-ballot-card-sub {
+  color: #6a7280;
+  font-size: 12.5px;
+}
+
+.aipv-ballot-card-stats {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: #6a7280;
+  margin-top: 6px;
+}
+
+.aipv-ballot-card-stats b {
+  color: #1f2328;
+  font-weight: 600;
+}
+
+.aipv-ballot-card .aipv-btn {
+  width: auto;
+  padding: 6px 14px;
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+/* detail */
+.aipv-ballot-header {
+  background: #fff;
+  border: 1px solid #e4e7eb;
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+}
+
+.aipv-ballot-header h2 {
+  margin: 0 0 4px;
+  font-size: 18px;
+}
+
+.aipv-ballot-meta {
+  color: #6a7280;
+  font-size: 12.5px;
+}
+
+.aipv-item-card {
+  background: #fff;
+  border: 1px solid #e4e7eb;
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 12px;
+}
+
+.aipv-item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.aipv-item-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.aipv-item-num {
+  display: inline-block;
+  background: #eef0f3;
+  color: #4a5058;
+  padding: 1px 7px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-right: 6px;
+}
+
+.aipv-choices {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 12.5px;
+}
+
+.aipv-choice {
+  background: #f7f8fa;
+  border: 1px solid #e4e7eb;
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.aipv-choice-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #6a7280;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.aipv-choice-value {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.aipv-choice-value.aipv-for { color: #2e7d32; }
+.aipv-choice-value.aipv-against { color: #c62828; }
+.aipv-choice-value.aipv-abstain { color: #f9a825; }
+.aipv-choice-value.aipv-none { color: #8a8a8a; font-weight: 500; }
+
+.aipv-reasoning {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: #f7f8fa;
+  border-left: 3px solid #c2570f;
+  border-radius: 0 4px 4px 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.aipv-reasoning-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #6a7280;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.aipv-override-block {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: #eef5fe;
+  border-left: 3px solid #1565c0;
+  border-radius: 0 4px 4px 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.aipv-override-arrow {
+  font-weight: 700;
+}
+
+.aipv-report-footer {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px;
+  color: #6a7280;
+  font-size: 11.5px;
+  text-align: center;
+}
+
+@media print {
+  .aipv-report-header { border-bottom: 1px solid #000; }
+  .aipv-report-actions, .aipv-report-footer { display: none; }
+  body.aipv-report { background: #fff; }
+  .aipv-item-card, .aipv-ballot-header { break-inside: avoid; }
+}

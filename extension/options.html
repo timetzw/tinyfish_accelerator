@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Consul.AI — Settings</title>
+    <link rel="stylesheet" href="ui.css" />
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body class="aipv-options">
+    <main class="aipv-options-wrap">
+      <header class="aipv-options-header">
+        <h1>Consul.AI — Settings</h1>
+        <p>
+          Connect your DeepSeek and TinyFish accounts to unlock real research
+          and reasoning. Keys live only in this browser profile.
+        </p>
+      </header>
+
+      <section class="aipv-q-card">
+        <h2>TinyFish Web Agent</h2>
+        <p class="aipv-muted-sub">
+          Powers proposal-level research: fetches full proposal text, board
+          rationale, ISS/Glass Lewis recommendations, peer comparisons.
+        </p>
+        <label for="aipv-tinyfish-key">TinyFish API key</label>
+        <input
+          id="aipv-tinyfish-key"
+          type="password"
+          autocomplete="off"
+          placeholder="tinyfish_xxx…"
+        />
+
+        <label class="aipv-check">
+          <input id="aipv-aggressive" type="checkbox" />
+          <span>Aggressive research (2 TinyFish calls per proposal — slower but richer)</span>
+        </label>
+      </section>
+
+      <section class="aipv-q-card">
+        <h2>DeepSeek Reasoning</h2>
+        <p class="aipv-muted-sub">
+          Consumes your profile + TinyFish research + your past override
+          history to produce a FOR / AGAINST / ABSTAIN with a chain of
+          reasoning.
+        </p>
+        <label for="aipv-deepseek-key">DeepSeek API key</label>
+        <input
+          id="aipv-deepseek-key"
+          type="password"
+          autocomplete="off"
+          placeholder="sk-xxx…"
+        />
+
+        <label for="aipv-deepseek-base">DeepSeek base URL</label>
+        <input
+          id="aipv-deepseek-base"
+          type="text"
+          autocomplete="off"
+          placeholder="https://api.deepseek.com"
+        />
+
+        <label for="aipv-deepseek-model">DeepSeek model</label>
+        <input
+          id="aipv-deepseek-model"
+          type="text"
+          autocomplete="off"
+          placeholder="deepseek-reasoner"
+        />
+      </section>
+
+      <section class="aipv-q-card">
+        <h2>SEC-API.io (optional)</h2>
+        <p class="aipv-muted-sub">
+          When set, director-election items get a structured roster
+          (independence, committees, other boards) pulled from SEC filings —
+          which is what we use to apply your overboarding and independence
+          bright-line rules. Free tier is usually enough for testing.
+        </p>
+        <label for="aipv-secapi-key">SEC-API.io token</label>
+        <input
+          id="aipv-secapi-key"
+          type="password"
+          autocomplete="off"
+          placeholder="sec_api_xxx…"
+        />
+      </section>
+
+      <div class="aipv-q-actions">
+        <button id="aipv-save" class="aipv-btn aipv-btn-primary">Save</button>
+        <button id="aipv-test" class="aipv-btn">Test connection</button>
+      </div>
+      <p id="aipv-options-status" class="aipv-options-status"></p>
+
+      <p class="aipv-footnote">
+        Keys are stored with <code>chrome.storage.local</code>. They never
+        leave this browser profile. Clear them by blanking the fields and
+        saving, or by uninstalling the extension.
+      </p>
+    </main>
+    <script src="options.js"></script>
+  </body>
+</html>

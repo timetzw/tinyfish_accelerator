@@ -1,13 +1,22 @@
 {
   "manifest_version": 3,
-  "name": "AI Proxy Voting Assistant",
-  "version": "0.0.3",
-  "description": "Analyzes ProxyVote ballots and suggests votes aligned with your personal investment profile.",
+  "name": "Consul.AI — Proxy Voting Assistant",
+  "version": "0.0.7",
+  "description": "Consul.AI analyzes ProxyVote ballots with TinyFish Web Agent research and DeepSeek reasoning, aligned with your firm's voting philosophy.",
   "permissions": ["storage", "tabs"],
-  "host_permissions": ["*://*.proxyvote.com/*"],
+  "host_permissions": [
+    "*://*.proxyvote.com/*",
+    "https://agent.tinyfish.ai/*",
+    "https://api.deepseek.com/*",
+    "https://api.sec-api.io/*"
+  ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "AI Proxy Voting Assistant"
+    "default_title": "Consul.AI — Proxy Voting Assistant"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
   },
   "background": {
     "service_worker": "background.js"
@@ -17,6 +26,7 @@
       "matches": ["*://*.proxyvote.com/*"],
       "js": [
         "keys.js",
+        "history.js",
         "adapter.js",
         "autofill.js",
         "injector.js",
@@ -30,7 +40,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["questionnaire.html"],
+      "resources": ["questionnaire.html", "report.html", "options.html"],
       "matches": ["*://*.proxyvote.com/*"]
     }
   ]

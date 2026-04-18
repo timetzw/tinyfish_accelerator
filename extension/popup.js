@@ -3,60 +3,104 @@
   const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
   const PREF_LABELS = {
-    role: {
-      label: "Role",
+    philosophy: {
+      label: "Philosophy",
       values: {
-        individual: "Individual",
-        advisor: "Financial advisor",
-        fund: "Fund manager",
+        esg: "ESG-focused",
+        value: "Value",
+        growth: "Growth",
+        preservation: "Capital preservation",
+        balanced: "Balanced",
       },
     },
     horizon: {
-      label: "Horizon",
+      label: "Holding period",
       values: {
-        short: "Short-term",
-        medium: "Medium-term",
-        long: "Long-term",
+        short: "Short (<1yr)",
+        medium: "Medium (1–5yr)",
+        long: "Long (5+yr)",
       },
     },
-    esg: {
-      label: "ESG",
-      values: { low: "Low", medium: "Medium", high: "High" },
-    },
-    governance: {
-      label: "Governance",
-      values: { lenient: "Lenient", moderate: "Moderate", strict: "Strict" },
-    },
-    execPay: {
-      label: "Exec pay",
+    boardIndependence: {
+      label: "Board independence",
       values: {
-        usually: "Supportive",
-        tied: "Performance-tied",
-        rarely: "Strict",
+        critical: "Critical",
+        important: "Important",
+        flexible: "Flexible",
       },
     },
-    shareholderRights: {
-      label: "Shareholder rights",
+    overboarding: {
+      label: "Overboarding",
       values: {
-        against: "Cautious",
-        case: "Case-by-case",
-        for: "Supportive",
+        strict4: "Against 4+ boards",
+        flag: "Flag for review",
+        none: "Not a factor",
       },
     },
-    climate: {
-      label: "Climate disclosure",
+    ceoChair: {
+      label: "CEO/Chair combined",
       values: {
-        optional: "Optional",
+        against: "Against",
+        depends: "Depends",
+        none: "No view",
+      },
+    },
+    sayOnPay: {
+      label: "Say-on-pay",
+      values: {
+        strict: "Strict (25% peer)",
+        moderate: "Pay-for-performance",
         supportive: "Supportive",
-        mandatory: "Mandatory",
       },
     },
-    bias: {
-      label: "Default bias",
+    equityPlans: {
+      label: "Equity plans",
       values: {
-        board: "With the board",
+        scrutinize: "Scrutinize (>5% dilution)",
+        review: "Case-by-case",
+        supportive: "Supportive",
+      },
+    },
+    envProposals: {
+      label: "Environmental",
+      values: {
+        strong: "Strong support",
+        selective: "Selective",
+        neutral: "Neutral",
+        against: "Against",
+      },
+    },
+    socialProposals: {
+      label: "Social",
+      values: {
+        supportive: "Supportive",
+        material: "If material",
+        case: "Case-by-case",
+        oppose: "Oppose",
+      },
+    },
+    shareholderVsBoard: {
+      label: "When in conflict",
+      values: {
+        shareholder: "Lean shareholder",
+        board: "Lean board",
         independent: "Independent",
-        protective: "Shareholder-protective",
+      },
+    },
+    auditorTenure: {
+      label: "Auditor tenure",
+      values: {
+        over7: "Flag past 7yr",
+        over15: "Flag past 15yr",
+        none: "Not a factor",
+      },
+    },
+    maPosture: {
+      label: "M&A default",
+      values: {
+        followBoard: "Follow board",
+        human: "Human review",
+        returns: "Return-driven",
       },
     },
   };
@@ -148,18 +192,80 @@
     window.close();
   }
 
+  function openReport() {
+    const url = chrome.runtime.getURL("report.html");
+    chrome.tabs.create({ url });
+    window.close();
+  }
+
+  function openOptions() {
+    if (chrome.runtime.openOptionsPage) {
+      chrome.runtime.openOptionsPage();
+    } else {
+      chrome.tabs.create({ url: chrome.runtime.getURL("options.html") });
+    }
+    window.close();
+  }
+
+  function renderApiStatus(store) {
+    const el = document.getElementById("aipv-api-status");
+    const parts = [];
+    parts.push(
+      store.tinyfishApiKey ? "TinyFish ✓" : "TinyFish (not set)"
+    );
+    parts.push(
+      store.deepseekApiKey ? "DeepSeek ✓" : "DeepSeek (not set)"
+    );
+    el.textContent = parts.join("  ·  ");
+  }
+
+  function renderHistory(history) {
+    const summary = document.getElementById("aipv-history-summary");
+    const ballots = (history && history.ballots) || {};
+    const keys = Object.keys(ballots);
+    if (keys.length === 0) {
+      summary.textContent = "No votes recorded yet.";
+      return;
+    }
+    let overrides = 0;
+    let total = 0;
+    for (const b of Object.values(ballots)) {
+      for (const it of Object.values(b.items || {})) {
+        if (!it.ai || !it.user) continue;
+        total += 1;
+        if (it.user.choice !== it.ai.recommendation) overrides += 1;
+      }
+    }
+    summary.className = "aipv-profile-summary";
+    summary.textContent = `${keys.length} ballot${keys.length === 1 ? "" : "s"}, ${total} item${total === 1 ? "" : "s"} voted · ${overrides} override${overrides === 1 ? "" : "s"}.`;
+  }
+
   async function init() {
     document
       .getElementById("aipv-questionnaire-btn")
       .addEventListener("click", openQuestionnaire);
+    document
+      .getElementById("aipv-report-btn")
+      .addEventListener("click", openReport);
+    document
+      .getElementById("aipv-options-btn")
+      .addEventListener("click", openOptions);
 
     const [tab, store] = await Promise.all([
       queryActiveTab(),
-      getStorage(["profile", "usage"]),
+      getStorage([
+        "profile",
+        "usage",
+        "votingHistory",
+        "tinyfishApiKey",
+        "deepseekApiKey",
+      ]),
     ]);
     renderStatus(tab);
     renderProfile(store.profile);
     renderUsage(store.usage);
+    renderHistory(store.votingHistory);
+    renderApiStatus(store);
   }
 
   document.addEventListener("DOMContentLoaded", init);

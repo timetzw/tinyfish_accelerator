@@ -51,9 +51,49 @@
     return null;
   }
 
+  function isUsableHref(href) {
+    if (!href) return false;
+    const s = String(href).trim();
+    if (!s) return false;
+    if (/^javascript:/i.test(s)) return false;
+    if (s === "#" || s.startsWith("#")) return false;
+    return true;
+  }
+
+  // Find the "More Details" / "More Information" / bio link for a proposal
+  // row. ProxyVote historically uses <a class="proposal-link">, but newer
+  // renderings label it plain "More Details" and drop the class — so match
+  // by class, by href hint, or by anchor text as a last resort.
   function extractMoreDetailsUrl(row) {
-    const a = row.querySelector("a.proposal-link");
-    return a ? a.getAttribute("href") : null;
+    const candidates = Array.from(row.querySelectorAll("a"));
+
+    // 1. Explicit class.
+    const byClass = candidates.find(
+      (a) => a.classList.contains("proposal-link") && isUsableHref(a.getAttribute("href"))
+    );
+    if (byClass) return byClass.getAttribute("href");
+
+    // 2. href hint (ProposalDetail / ProposalInformation endpoints).
+    const byHref = candidates.find((a) => {
+      const h = a.getAttribute("href") || "";
+      return /proposal(detail|info|information)/i.test(h) && isUsableHref(h);
+    });
+    if (byHref) return byHref.getAttribute("href");
+
+    // 3. Anchor text.
+    const labelRe = /more\s*(details|information|info)|view\s*bio|director\s*bio/i;
+    const byText = candidates.find((a) => {
+      const text = (a.textContent || "").trim();
+      return labelRe.test(text) && isUsableHref(a.getAttribute("href"));
+    });
+    if (byText) return byText.getAttribute("href");
+
+    // 4. Any anchor in the row that looks navigable (last resort — useful
+    // when the link text is rendered via CSS ::after or an icon).
+    const anyNav = candidates.find((a) =>
+      isUsableHref(a.getAttribute("href"))
+    );
+    return anyNav ? anyNav.getAttribute("href") : null;
   }
 
   function extractContentColumn(row) {
@@ -97,6 +137,21 @@
     return items;
   }
 
+  function extractTicker(bodyText) {
+    if (!bodyText) return null;
+    const patterns = [
+      /\((?:NASDAQ|NYSE|NYSE\s*American|AMEX|CBOE)\s*[:\-]\s*([A-Z][A-Z0-9.\-]{0,5})\)/i,
+      /ticker\s+symbol\s*[:"'\u201c]?\s*([A-Z][A-Z0-9.\-]{0,5})\b/i,
+      /under\s+the\s+symbol\s*["\u201c]?([A-Z][A-Z0-9.\-]{0,5})["\u201d]?/i,
+      /virtualshareholdermeeting\.com\/([A-Z]{1,6})\d{2,4}/i,
+    ];
+    for (const re of patterns) {
+      const m = bodyText.match(re);
+      if (m && m[1]) return m[1].toUpperCase();
+    }
+    return null;
+  }
+
   function extractMeta() {
     const headings = Array.from(
       document.querySelectorAll("h1, h2, h3, h4")
@@ -125,12 +180,14 @@
     const bodyText = (document.body && document.body.innerText) || "";
     const dateMatch = bodyText.match(/holders?\s+as\s+of\s+([^\.\n]{5,80})/i);
     const sharesMatch = bodyText.match(/Shares\s+available[:\s]*([\d,\.]+)/i);
+    const ticker = extractTicker(bodyText);
 
     return {
       company,
       meetingName,
       recordDate: dateMatch ? dateMatch[1].trim() : null,
       sharesAvailable: sharesMatch ? sharesMatch[1] : null,
+      ticker,
     };
   }
 
