@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Consul.AI — Voting Report</title>
+    <link rel="stylesheet" href="ui.css" />
+    <link rel="stylesheet" href="report.css" />
+  </head>
+  <body class="aipv-report">
+    <header class="aipv-report-header">
+      <div class="aipv-report-header-inner">
+        <div>
+          <h1 id="aipv-report-title">Consul.AI Voting Report</h1>
+          <p id="aipv-report-subtitle" class="aipv-muted-sub">
+            Loading voting history…
+          </p>
+        </div>
+        <div class="aipv-report-actions">
+          <button id="aipv-btn-back" class="aipv-btn" hidden>← All ballots</button>
+          <button id="aipv-btn-csv" class="aipv-btn" hidden>Export CSV</button>
+          <button id="aipv-btn-export" class="aipv-btn" hidden>Export JSON</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="aipv-report-main">
+      <section id="aipv-stats" class="aipv-stats" hidden>
+        <div class="aipv-stat">
+          <span class="aipv-stat-num" id="aipv-stat-items">0</span>
+          <span class="aipv-stat-label">items</span>
+        </div>
+        <div class="aipv-stat">
+          <span class="aipv-stat-num" id="aipv-stat-follows">0</span>
+          <span class="aipv-stat-label">accepted AI</span>
+        </div>
+        <div class="aipv-stat">
+          <span class="aipv-stat-num aipv-stat-override" id="aipv-stat-overrides">0</span>
+          <span class="aipv-stat-label">user overrides</span>
+        </div>
+        <div class="aipv-stat">
+          <span class="aipv-stat-num" id="aipv-stat-overrides-with-reason">0</span>
+          <span class="aipv-stat-label">overrides w/ reason</span>
+        </div>
+      </section>
+
+      <section id="aipv-ballot-list" class="aipv-ballot-list"></section>
+      <section id="aipv-ballot-detail" class="aipv-ballot-detail"></section>
+      <p id="aipv-empty" class="aipv-empty" hidden>
+        No voting history yet. Analyze a ballot on proxyvote.com to start
+        building your record.
+      </p>
+    </main>
+
+    <footer class="aipv-report-footer">
+      Reports are stored locally in your browser only. They never leave your
+      machine unless you export them.
+    </footer>
+
+    <script src="report.js"></script>
+  </body>
+</html>

@@ -2,13 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>AI Proxy Voting Assistant</title>
+    <title>Consul.AI</title>
     <link rel="stylesheet" href="ui.css" />
   </head>
   <body class="aipv-popup">
     <div class="aipv-popup-header">
-      <h1 class="aipv-popup-title">AI Proxy Voting Assistant</h1>
-      <p class="aipv-popup-subtitle">Vote aligned with your values</p>
+      <h1 class="aipv-popup-title">Consul.AI</h1>
+      <p class="aipv-popup-subtitle">Proxy voting aligned with your firm's philosophy</p>
     </div>
 
     <section class="aipv-section">
@@ -17,6 +17,12 @@
         <span id="aipv-status-dot" class="aipv-dot aipv-dot-idle"></span>
         <span id="aipv-status-text">Checking current tab…</span>
       </div>
+      <p id="aipv-api-status" class="aipv-footnote" style="margin-top:6px;"></p>
+    </section>
+
+    <section class="aipv-section">
+      <p class="aipv-section-title">APIs</p>
+      <button id="aipv-options-btn" class="aipv-btn">Configure TinyFish + DeepSeek keys</button>
     </section>
 
     <section class="aipv-section">
@@ -28,6 +34,14 @@
       <button id="aipv-questionnaire-btn" class="aipv-btn aipv-btn-primary">
         Start questionnaire
       </button>
+    </section>
+
+    <section class="aipv-section">
+      <p class="aipv-section-title">Voting History</p>
+      <p id="aipv-history-summary" class="aipv-profile-empty">
+        No votes recorded yet.
+      </p>
+      <button id="aipv-report-btn" class="aipv-btn">View voting reports</button>
     </section>
 
     <section class="aipv-section">

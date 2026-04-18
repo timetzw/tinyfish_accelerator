@@ -42,10 +42,40 @@
     if (!lbl) return;
     const marker = document.createElement("span");
     marker.className = "aipv-marker";
-    marker.textContent = " · AI";
-    marker.title = "Filled by AI Proxy Voting Assistant — click any option to override";
+    marker.textContent = " · Consul.AI";
+    marker.title =
+      "Filled by Consul.AI — click any option to override";
     lbl.appendChild(marker);
     radio.dataset.aipvFilled = "1";
+  }
+
+  function choiceOf(item, radio) {
+    if (!item || !item.radios) return null;
+    for (const [name, r] of Object.entries(item.radios)) {
+      if (r === radio) return name;
+    }
+    return null;
+  }
+
+  // Attaches change listeners to every radio in the item so we can distinguish
+  // user selections from the programmatic fill below. event.isTrusted is only
+  // true for real user-initiated events, which is exactly the signal we want.
+  function attachUserChoiceListener(item, aiRecommendation, onUserChoice) {
+    if (!item || !item.radios) return;
+    for (const [choice, radio] of Object.entries(item.radios)) {
+      if (radio.dataset.aipvListener === "1") continue;
+      radio.dataset.aipvListener = "1";
+      radio.addEventListener("change", (ev) => {
+        if (!ev.isTrusted) return;
+        if (!radio.checked) return;
+        onUserChoice({
+          item,
+          aiRecommendation,
+          userChoice: choice,
+          overridden: (aiRecommendation || "").toUpperCase() !== choice,
+        });
+      });
+    }
   }
 
   function fillRadio(radio) {
@@ -70,4 +100,6 @@
   }
 
   AIPV.fillRadio = fillRadio;
+  AIPV.attachUserChoiceListener = attachUserChoiceListener;
+  AIPV.choiceOf = choiceOf;
 })();
